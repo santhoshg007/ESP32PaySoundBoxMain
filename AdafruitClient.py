@@ -2,12 +2,13 @@ import paho.mqtt.client as mqtt
 import uuid
 import json
 import time
+import os
 
 # Adafruit IO MQTT Settings
 broker = "io.adafruit.com"
 port = 1883
 #username = ""  # Replace with your Adafruit IO username
-#aio_key = ""     # Replace with your Adafruit IO key
+aio_key = os.getenv("AIO_KEY")
 feed = "paymenttrigger"  # Replace with the feed you're interested in
 
 # Initialize MQTT client

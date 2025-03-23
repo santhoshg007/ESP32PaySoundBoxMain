@@ -1,14 +1,15 @@
 from flask import Flask, request, jsonify
 import paho.mqtt.client as mqtt
 import json
+import os
 
 app = Flask(__name__)
 
 # Adafruit IO MQTT Settings
 broker = "io.adafruit.com"
 port = 1883
-#username = "SanthoshG"  # Replace with your Adafruit IO username
-#aio_key = ""  # Replace with your Adafruit IO key
+username = "SanthoshG"  # Replace with your Adafruit IO username
+aio_key = os.getenv("AIO_KEY")
 feed = "paymentTrigger"  # Replace with the feed you're interested in
 
 # Initialize MQTT client for publishing to Adafruit IO
