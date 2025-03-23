@@ -6,8 +6,8 @@ import time
 # Adafruit IO MQTT Settings
 broker = "io.adafruit.com"
 port = 1883
-username = "SanthoshG"  # Replace with your Adafruit IO username
-aio_key = ""     # Replace with your Adafruit IO key
+#username = ""  # Replace with your Adafruit IO username
+#aio_key = ""     # Replace with your Adafruit IO key
 feed = "paymenttrigger"  # Replace with the feed you're interested in
 
 # Initialize MQTT client
