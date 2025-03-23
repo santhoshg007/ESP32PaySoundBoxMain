@@ -1,0 +1,357 @@
+Preference :
+http://arduino.esp8266.com/stable/package_esp8266com_index.json,https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json,https://dl.espressif.com/dl/package_esp32_index.json
+
+Setup Your Development Environment ESP32-S3 EC200U :
+
+	1. Download and Install Arduino IDE
+	2. Add ESP32 Boards to Arduino IDE
+		Open Arduino IDE and go to File > Preferences.
+		In the "Additional Board Manager URLs" field, paste this URL: https://dl.espressif.com/dl/package_esp32_index.json
+		Click OK to save
+	3. Install the ESP32 Board Package
+		Go to Tools > Board > Boards Manager.
+		Search for "ESP32" in the Boards Manager.
+		Select the "esp32 by Espressif Systems" package and click Install.
+
+	4. Select Your Board
+		Go to Tools > Board and select the appropriate board for your device, such as ESP32-S3 Dev Module (or another option that matches your setup).
+
+	5. Choose the Correct Port
+		Connect your board to your computer using a USB cable.
+
+		In Arduino IDE, go to Tools > Port and select the port your device is connected to.
+
+	6. Test with a Basic Program
+		Open the Blink Example to test your setup:
+		Go to File > Examples > 01.Basics > Blink.
+		Update the pin number in the code to match the onboard LED pin (e.g., GPIO 2 for most ESP32 boards).
+		Upload the code by clicking on the Upload button.
+		
+Install Library :
+-----------------
+1. TinyGSM :
+	The TinyGSM library for Arduino was authored by Volodymyr Shymanskyy, a software engineer known for developing open-source libraries and tools for IoT applications.
+
+2. Find the Keypad library (author: Mark Stanley, Alexander Brevig).	
+
+
+Install python runnning Sever :
+--------------------------------
+1. Install python.
+2. python -m ensurepip --upgrade
+3. pip install pubnub==3.9.0
+
+1. 
+2. pip install flask
+
+
+Install of ngrok :
+--------------------
+
+My key : KT2DUWDKBXMKMPEG7XUKGY242QBO5S2Y
+
+Invoke-WebRequest -Uri https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-windows-amd64.zip -OutFile ngrok-v3-stable-windows-amd64.zip
+Expand-Archive .\ngrok-v3-stable-windows-amd64.zip -DestinationPath .\
+
+ngrok authtoken KT2DUWDKBXMKMPEG7XUKGY242QBO5S2Y
+
+2uiRysWq7l6t3CrRD56usFLd0jd_6JaNxbAW5hngE9jFHCUSL
+
+Payment method :
+----------------
+When designing a DIY sound box that incorporates payment methods, you'll need to consider a few factors: the user experience, security, and the practicality of integration. Here's a breakdown of different payment methods and how you might implement them:
+
+1. QR Code Payments (Most Practical for DIY):
+
+	How it works:
+		Your sound box displays a QR code.
+		The user scans the QR code with their smartphone.
+		The QR code directs them to a payment page (e.g., PayPal, Stripe, or a cryptocurrency wallet).
+		Once the payment is confirmed, your sound box receives a notification.
+	Implementation:
+		Server-side: You'll need a server (e.g., a Raspberry Pi or a cloud server) to generate the payment link or QR code. This server handles the communication with the payment gateway.
+		ESP32/Microcontroller: Your sound box's microcontroller (e.g., ESP32) displays the QR code on a small screen or OLED display.
+	Communication:
+		The ESP32 communicates with the server via Wi-Fi or Bluetooth.
+	Libraries: 
+		Use libraries for QR code generation and communicating with the payment gateway's API.
+	Webhooks:
+		Use webhooks to receive real-time payment confirmations.
+	Pros:
+		Contactless and convenient.
+		Relatively easy to integrate.
+		Supports various payment platforms.
+	Cons:
+		Requires a smartphone.
+		Relies on internet connectivity.
+	
+2. NFC (Near Field Communication):
+
+How it works:
+	The user taps their NFC-enabled smartphone or card on an NFC reader attached to your sound box.
+	The payment is processed through a payment gateway.
+Implementation:
+	NFC Reader: You'll need an NFC reader module.
+	Microcontroller: Your microcontroller communicates with the NFC reader.
+	Server-side (Optional): You might need a server to handle payment processing and communication with the payment gateway.
+Pros:
+	Fast and convenient.
+	Contactless.
+	Cons:
+	Requires NFC-enabled devices.
+	NFC reader modules can be more complex to integrate.
+	Security concerns if not implemented correctly.
+
+
+3. Cryptocurrency Payments:
+
+	How it works:
+		Your sound box displays a cryptocurrency wallet address or a QR code for payment.
+		The user sends the cryptocurrency to the address.
+		Your sound box monitors the blockchain for payment confirmation.
+	Implementation:
+		Microcontroller: Your microcontroller displays the wallet address or QR code.
+		Internet Connectivity: You'll need internet connectivity to monitor the blockchain.
+		Libraries: Use libraries for interacting with the cryptocurrency's API.
+	Pros:
+		Decentralized and secure.
+		Low transaction fees (in some cases).
+	Cons:
+		Cryptocurrency volatility.
+		Requires user familiarity with cryptocurrency.
+		Blockchain monitoring adds complexity.
+
+
+4. Credit/Debit Card Readers (More Complex):
+
+	How it works:
+		The user inserts or swipes their credit/debit card in a card reader attached to your sound box.
+		The payment is processed through a payment gateway.
+	Implementation:
+	Card Reader:
+		You'll need a certified card reader module.
+	Microcontroller: Your microcontroller communicates with the card reader.
+	Server-side: You'll need a server to handle payment processing and communication with the payment gateway.
+	
+	Pros:
+		Widely accepted.
+	Cons:
+		Card reader modules can be expensive.
+		Requires PCI DSS compliance (for handling sensitive card data).
+		Significantly more complex to implement.
+		Security risks are high if not implemented correctly.
+		
+		
+	DIY Considerations:
+	Security: 
+		Prioritize security in your design. Never store sensitive payment data directly on the microcontroller.
+	User Experience: 
+		Make the payment process as simple and intuitive as possible.
+	Internet Connectivity: 
+		If your payment method relies on the internet, ensure a reliable connection.
+	Power Consumption: 
+		Consider the power consumption of your payment modules.
+	Cost: 
+		Balance the cost of the payment modules with your budget.
+	Software Libraries: 
+		utilize available software libraries to make the project easier.
+	For most DIY sound box projects, QR code payments offer the best balance of convenience, security, and ease of implementation.	
+	
+
+Explanation of Key Components:
+Message Queue:
+
+We use a message queue (msgQueue) to pass data between the keyboard task and the main task. The keyboardMonitorTask sends key presses to the main thread, where logic is handled.
+
+Main Task:
+
+	The mainTask is the central control thread. It listens to messages from the keyboardMonitorTask, updates the payment method, and handles the flow of the application. For example, when the user presses '1' for the QR method, it sets the paymentMethod to "QR". When the user presses '#', it processes the payment method and updates the history.
+
+Keyboard Monitor Task:
+
+	The keyboardMonitorTask checks the keypad for user input. Whenever a key is pressed, it sends the key to the main thread via the message queue.
+
+Display Task:
+
+	The displayTask is responsible for updating the screen based on the current application state (home screen, QR code entry, NFC card detection, or payment history).
+
+	Synchronous drawing is used when we need to immediately update the display (e.g., showing the home screen), while asynchronous drawing adds a delay before updating the display (e.g., showing a QR code generation screen).
+
+WiFi Task:
+
+	The wifiTask is running in the background to ensure the device remains connected to WiFi. It attempts to reconnect if the WiFi is disconnected.	
+-------------
+Sample Code :
+-------------------
+#include <Arduino.h>
+#include <TFT_eSPI.h>
+#include <Keypad.h>
+#include <WiFi.h>
+#include <Wire.h>
+#include <PN532_I2C.h>
+#include <PN532.h>
+
+// Define TFT display
+TFT_eSPI tft = TFT_eSPI(); // TFT display object
+#define TFT_CS     5
+#define TFT_RST    17
+#define TFT_DC     16
+
+// Keypad setup (4x4 matrix)
+const byte ROW_NUM = 4;
+const byte COLUMN_NUM = 4;
+char keys[ROW_NUM][COLUMN_NUM] = {
+    {'1', '2', '3', 'A'},
+    {'4', '5', '6', 'B'},
+    {'7', '8', '9', 'C'},
+    {'*', '0', '#', 'D'}
+};
+byte pin_rows[ROW_NUM] = {23, 22, 21, 19}; // Adjust to your wiring
+byte pin_column[COLUMN_NUM] = {18, 5, 4, 0}; // Adjust to your wiring
+Keypad keypad = Keypad(makeKeymap(keys), pin_rows, pin_column, ROW_NUM, COLUMN_NUM);
+
+// NFC Setup
+PN532_I2C pn532(Wire);
+PN532 nfc(pn532);
+
+// WiFi credentials
+const char *ssid = "YourSSID";
+const char *password = "YourPassword";
+
+// Message Queue Setup for communication between threads
+QueueHandle_t msgQueue;
+#define QUEUE_SIZE 10
+
+// Global Variables
+String paymentMethod = "";
+String enteredAmount = "";
+String paymentHistory = "";
+
+// Define Task Handles
+TaskHandle_t mainTaskHandle;
+TaskHandle_t keyboardTaskHandle;
+TaskHandle_t displayTaskHandle;
+TaskHandle_t wifiTaskHandle;
+
+// Struct to send data through the message queue
+struct Message {
+    char key;
+};
+
+// Function to initialize the display
+void initDisplay() {
+    tft.begin();
+    tft.fillScreen(TFT_BLACK);
+    tft.setTextColor(TFT_WHITE);
+}
+
+// Display Thread: Synchronous and Asynchronous Draw
+void drawTextSync(const String &text) {
+    tft.fillScreen(TFT_BLACK);
+    tft.drawString(text, 10, 10);
+}
+
+void drawTextAsync(const String &text) {
+    // This function simulates async behavior by adding a delay before updating the display.
+    delay(2000);
+    drawTextSync(text);
+}
+
+// Keyboard Monitor Thread: Wait for input and send messages to main thread
+void keyboardMonitorTask(void *pvParameters) {
+    while (true) {
+        char key = keypad.getKey();
+        if (key) {
+            Message msg;
+            msg.key = key;
+            // Send the key to the main thread via the message queue
+            xQueueSend(msgQueue, &msg, portMAX_DELAY);
+        }
+        delay(100);
+    }
+}
+
+// Display Task: Handle display updates
+void displayTask(void *pvParameters) {
+    while (true) {
+        String message;
+        // Check message from main task
+        if (paymentMethod == "") {
+            message = "Home Screen\n1. QR Code\n2. NFC\n3. Payment History";
+            drawTextSync(message);
+        } else if (paymentMethod == "QR") {
+            message = "Enter Amount for QR: " + enteredAmount;
+            drawTextAsync(message); // Asynchronous drawing
+        } else if (paymentMethod == "NFC") {
+            message = "Place NFC Card";
+            drawTextAsync(message);
+        } else if (paymentMethod == "History") {
+            message = "Payment History: " + paymentHistory;
+            drawTextSync(message);
+        }
+        delay(1000);
+    }
+}
+
+// WiFi Task: Monitor WiFi connection (for status updates, if necessary)
+void wifiTask(void *pvParameters) {
+    while (true) {
+        if (WiFi.status() != WL_CONNECTED) {
+            WiFi.begin(ssid, password);
+            while (WiFi.status() != WL_CONNECTED) {
+                delay(1000);
+            }
+        }
+        delay(5000);
+    }
+}
+
+// Main Task: Handle logic and flow of the system
+void mainTask(void *pvParameters) {
+    // Initialize WiFi and display
+    WiFi.begin(ssid, password);
+    initDisplay();
+    
+    while (true) {
+        Message msg;
+        if (xQueueReceive(msgQueue, &msg, portMAX_DELAY)) {
+            // Handle the key press from the queue
+            if (msg.key == '1') {
+                paymentMethod = "QR";
+            } else if (msg.key == '2') {
+                paymentMethod = "NFC";
+            } else if (msg.key == '3') {
+                paymentMethod = "History";
+            } else if (msg.key == '#') {
+                if (paymentMethod == "QR") {
+                    paymentHistory += "QR Payment: " + enteredAmount + "\n";
+                    enteredAmount = ""; // Reset amount after successful entry
+                    paymentMethod = "";
+                } else if (paymentMethod == "NFC") {
+                    paymentHistory += "NFC Payment: Successful\n";
+                    paymentMethod = "";
+                }
+            } else if (msg.key >= '0' && msg.key <= '9') {
+                enteredAmount += msg.key;
+            }
+        }
+    }
+}
+
+void setup() {
+    Serial.begin(115200);
+
+    // Create message queue
+    msgQueue = xQueueCreate(QUEUE_SIZE, sizeof(Message));
+
+    // Create tasks
+    xTaskCreate(mainTask, "Main Task", 2048, NULL, 1, &mainTaskHandle);
+    xTaskCreate(keyboardMonitorTask, "Keyboard Monitor Task", 2048, NULL, 1, &keyboardTaskHandle);
+    xTaskCreate(displayTask, "Display Task", 2048, NULL, 1, &displayTaskHandle);
+    xTaskCreate(wifiTask, "WiFi Task", 2048, NULL, 1, &wifiTaskHandle);
+}
+
+void loop() {
+    // The main loop is empty because the logic is handled by FreeRTOS tasks
+}
+	

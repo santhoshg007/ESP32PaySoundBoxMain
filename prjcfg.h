@@ -59,6 +59,22 @@ extern "C" {
 
 /* Enable the  MQTT CLIENT  */
 #define ENABLE_PUB_SUB_CLIENT          1
+
+/* Enable the  MQTT CLIENT  */
+#define ENABLE_MATRIX_KEYPAD          1
+
+/* Enable the  Tiny GSM CLIENT  */
+//#define ENABLE_TINY_GSM_MODULE          1
+
+// Define modem interface
+#define TINY_GSM_MODEM_EC200U 
+
+/*===================================== GPIO Pin Macro ===========================================() */
+
+#define TFT_CS     5
+#define TFT_RST    17
+#define TFT_DC     16
+
 /*=====================================Macro======================================================() */
 
 #define ENABLE(__enable_feature__)     ( defined (__enable_feature__) && __enable_feature__ )
@@ -107,6 +123,11 @@ typedef enum tageMQTTStateErrorCode
 /*}}}*/
 /*=====================================typedef=====================================================() */
 
+// Struct to send data through the message queue
+struct Message 
+{
+    char key;  // For text characters, we use `char`
+};
 /*=====================================Global Variable=============================================() */
 
 /*=====================================Private Variable============================================() */

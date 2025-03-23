@@ -55,6 +55,18 @@
 #include <PubSubClient.h> // Lib version - 2.8
 #endif /* ENABLE_PUB_SUB_CLIENT */
 
+#ifdef ENABLE_MATRIX_KEYPAD
+#include <Keypad.h>
+#endif /* ENABLE_MATRIX_KEYPAD */
+
+#ifdef TINY_GSM_MODEM_EC200U
+  #ifdef ENABLE_TINY_GSM_MODULE
+    #include <TinyGsmClient.h>
+  #else
+    #include <HardwareSerial.h>
+  #endif /* ENABLE_TINY_GSM_MODULE */
+#endif /* TINY_GSM_MODEM_EC200U */
+
 /*===================================== Macros =======================================*/
 
 /*{{{ Pay Sound Box thread configuration */
@@ -65,6 +77,11 @@
 /*{{{ Pay Sound Box thread configuration */
 #define PSB_WORKER_THREAD_NAME       "WORKER" 
 #define PAY_WORKER_STACK_SIZE        ( 1 * 1024 )  /* 1Kb */
+/*}}}*/
+
+/*{{{ Keypad thread configuration */
+#define KEYPAD_THREAD_NAME       "KEYPAD" 
+#define KEYPAD_STACK_SIZE        ( 2 * 1024 )  /* 1Kb */
 /*}}}*/
 
 #define MAX_UNIQUE_ID_LEN       ( 20 )
@@ -80,7 +97,7 @@ const char* cgpcSSID = "PSBOX";
 const char* cgpcWifiPassword = "12345678";
 
 // MQTT broker details
-const char*  MqttServer = "192.168.0.0"; // or hostname
+const char*  cgpcMqttServer = "192.168.0.0"; // or hostname
 const short int cgpi16MqttPort = 1883; // Default MQTT port
 
 const char* cgpcMqttUser = "SanthoshG"; // Optional
@@ -101,6 +118,31 @@ WiFiClient gWifiespClient;
 PubSubClient gMQTTClient(gWifiespClient);
 #endif /* ENABLE_PUB_SUB_CLIENT */
 
+#ifdef ENABLE_MATRIX_KEYPAD
+// Keypad setup (4x4 matrix)
+const byte ROW_NUM = 4;
+const byte COLUMN_NUM = 4;
+char keys[ROW_NUM][COLUMN_NUM] = {
+    {'1', '2', '3', 'A'},
+    {'4', '5', '6', 'B'},
+    {'7', '8', '9', 'C'},
+    {'*', '0', '#', 'D'}
+};
+byte pin_rows[ROW_NUM] = {23, 22, 21, 19}; // Adjust to your wiring
+byte pin_column[COLUMN_NUM] = {18, 5, 4, 0}; // Adjust to your wiring
+Keypad keypad = Keypad(makeKeymap(keys), pin_rows, pin_column, ROW_NUM, COLUMN_NUM);
+
+#endif /* ENABLE_MATRIX_KEYPAD */
+
+
+// Define Task Handles
+TaskHandle_t gtskMainProcessHndl;
+TaskHandle_t gtskKeyboardHndl;
+TaskHandle_t gtskDisplayHndl;
+
+// Message Queue Setup for communication between threads
+QueueHandle_t msgQueue;
+#define QUEUE_SIZE 10
 /*===================================== Private Variables ===========================*/
 
 
@@ -160,7 +202,7 @@ char* PSB_GetUniqueIDString( void )
 
   if( '\0' == gacUniqueID [0] )
   {
-    snprintf(gacUniqueID, sizeof(gacUniqueID), "%llX", chipid); // Format as hexadecimal
+    snprintf(gacUniqueID, sizeof(gacUniqueID), "%llX", ui64chipId ); // Format as hexadecimal
     Serial.print("gacUniqueID ID: ");
     Serial.println(gacUniqueID);
   }
@@ -201,15 +243,6 @@ BOOL WifiLinkProcess( void )
   return bReturnStatus;
 }
 /*}}*/
-
-// Error Codes
-#define MQTT_ERR_CODE_UNATHORIZED           -7
-#define MQTT_ERR_CODE_BAD_CLIENT_ID         -6
-#define MQTT_ERR_CODE_DISCONNECT            -5
-#define MQTT_ERR_CODE_CONNECT_FAIL          -4
-#define MQTT_ERR_CODE_CONNECT_LOST          -3
-#define MQTT_ERR_CODE_TIMEOUT               -2
-#define MQTT_ERR_CODE_UNKNOWN               -8
 
 /*
  * Args    : MQTT State
@@ -274,7 +307,7 @@ void MQTT_HandleErrorCode( int errorCode )
 /*{{ MQTT_Reconnect() */
 boolean MQTT_Reconnect( void )
 {
-  boolean  bRetMqttConnectStatus = false;
+  boolean  bRetMqttConnectStatus = true;
 
   while ( ! gMQTTClient.connected() )
   {
@@ -301,13 +334,37 @@ boolean MQTT_Reconnect( void )
 
       Serial.println(" try again in 5 seconds");
       delay(5000);
+
+      bRetMqttConnectStatus = false;
     }
   }
   
-  rerurn bRetMqttConnectStatus;
+  return bRetMqttConnectStatus;
 }
 /*}}*/
 
+/*
+ * Args    : void *
+ * Return  : void
+ * Description :
+ */
+/*{{ PSB_ProcessThread00() */
+void MQTT_ResponseCallback( char* pcMqttSubcTopic, byte* pcPayload, unsigned int ui32Length ) 
+{
+  Serial.print("Message arrived [");
+  Serial.print(pcMqttSubcTopic);
+  Serial.print("] ");
+
+  for ( int i = 0; i < ui32Length; i++ ) 
+  {
+    Serial.print((char)pcPayload[i]);
+  }
+  Serial.println();
+
+  // Handle incoming messages (e.g., commands)
+
+}
+/*}}*/
 /*
  * Args    : void *
  * Return  : void
@@ -332,14 +389,68 @@ void PSB_ProcessThread00(void *pvParameters)
 /*{{ PSB_ProcessThread00() */
 void PSB_PaySoundBoxManagerThread ( void *pvParameters )
 {
-  while ( 1 )
+  Message msg;
+
+    // Initialize WiFi and display
+  //WiFi.begin(ssid, password);
+  //initDisplay();
+
+  while ( true )
   {
+    if (xQueueReceive(msgQueue, &msg, portMAX_DELAY))
+    {
+#if 0      
+        // Handle the key press from the queue
+        if (msg.key == '1') {
+            paymentMethod = "QR";
+        } else if (msg.key == '2') {
+            paymentMethod = "NFC";
+        } else if (msg.key == '3') {
+            paymentMethod = "History";
+        } else if (msg.key == '#') {
+            if (paymentMethod == "QR") {
+                paymentHistory += "QR Payment: " + enteredAmount + "\n";
+                enteredAmount = ""; // Reset amount after successful entry
+                paymentMethod = "";
+            } else if (paymentMethod == "NFC") {
+                paymentHistory += "NFC Payment: Successful\n";
+                paymentMethod = "";
+            }
+        } else if (msg.key >= '0' && msg.key <= '9') {
+            enteredAmount += msg.key;
+        }
+#endif  
+    }
+  
     Serial.println("Sound Box Main thead...");
     vTaskDelay(1000 / portTICK_PERIOD_MS);  // Delay for 1 second
   }
 }
 /*}}*/
 
+/*
+ * Args    : void *
+ * Return  : void
+ * Description : Keyboard Monitor Task: Wait for input and send messages to main thread
+ */
+/*{{ PSB_KeyboardMonitorTask() */
+void PSB_KeyboardMonitorTask(void *pvParameters)
+{
+    while ( true ) 
+    {
+        char key = keypad.getKey();
+        if ( key ) 
+        {
+            Message msg;
+            msg.key = key;
+            // Send the key to the main thread via the message queue
+            xQueueSend(msgQueue, &msg, portMAX_DELAY);
+        }
+        delay(100);
+    }
+}
+
+/*}}*/
 /*
  * Args    : void *
  * Return  : void
@@ -390,6 +501,20 @@ void PSB_WifiResetIfTimeout( void )
 }
 /*}}*/
 
+/*
+ * Args    : void
+ * Return  : void
+ * Description :Function to initialize the display
+ */
+/*{{ initDisplay() */
+void initDisplay()
+{
+    tft.begin();
+    tft.fillScreen(TFT_BLACK);
+    tft.setTextColor(TFT_WHITE);
+}
+/*}}*/
+
 /*{{{ setup()*/
 void setup() 
 {
@@ -399,9 +524,24 @@ void setup()
   /* Setup Wifi*/
   PSB_WifiSetup( );
 
+
+  gMQTTClient.setServer( cgpcMqttServer, cgpi16MqttPort );
+  gMQTTClient.setCallback( MQTT_ResponseCallback );
+
+  // Create message queue
+  msgQueue = xQueueCreate( QUEUE_SIZE, sizeof( Message ) );
+
   // Create FreeRTOS tasks
   xTaskCreate(PSB_ProcessThread00, "Task1", 1000, NULL, 1, NULL);
   xTaskCreate(PSB_ProcessThread01, "Task2", 1000, NULL, 1, NULL);
+
+  xTaskCreate( PSB_KeyboardMonitorTask
+              , KEYPAD_THREAD_NAME
+              , KEYPAD_STACK_SIZE
+              , NULL
+              , 1
+              , &gtskKeyboardHndl
+              );
 
   /* Pay Sound Box Manager thread create */
   xTaskCreate(  PSB_PaySoundBoxManagerThread
@@ -409,7 +549,7 @@ void setup()
               , PAY_SOUND_BOX_MANAGER_STACK_SIZE
               , NULL
               , 1
-              , NULL );
+              , &gtskMainProcessHndl );
 }
 /*}}}*/
 
