@@ -6,8 +6,8 @@ import time
 
 # Initialize the Pubnub Keys
 # Replace them with your keysets
-pub_key = "pub-c-8d7a0bbd-5ee4-4148-a1b1-da94fa53ff2f"
-sub_key = "sub-c-42eb7c66-8e90-4ec6-a939-e5967dc2cfff"
+pub_key = "SUB"
+sub_key = "KEY"
 
 def init():  # initialize the pubnub keys and start subscribing
     global pubnub  # Pubnub Initialization
