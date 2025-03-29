@@ -42,6 +42,9 @@ Install Library :
 
 6. Search for "Ping" and install the library called Ping by 2banty.
 
+7. Look for a library like "qrcode" (a popular one) or "QRCode" by the "Eliot" library, which is compatible with the Arduino platform.
+
+
 
 
 
@@ -86,6 +89,19 @@ TFT Display Pin	ESP32 Pin
 	SDI(MOSI)	Pin 23
 	SCK	Pin 18
 	LED	3.3V
+
+Uncomment the configuration line that corresponds to your display. For example, for ILI9341, uncomment the following lines:
+
+cpp
+Copy
+#define ILI9341_DRIVER
+#define TFT_CS     5
+#define TFT_RST    4
+#define TFT_DC     2
+#define TFT_CLK    18
+#define TFT_MISO   19
+#define TFT_MOSI   23
+#define TFT_LED    3.3V
 
 Payment method :
 ----------------
@@ -384,4 +400,93 @@ void setup() {
 void loop() {
     // The main loop is empty because the logic is handled by FreeRTOS tasks
 }
+	
+================================
+#include <WiFi.h>
+#include <TFT_eSPI.h>  // TFT library for ESP32
+#include <QRCode.h>     // QRCode library for generating QR codes
+
+// WiFi credentials (for internet connection, if needed)
+const char* ssid = "your_wifi_ssid";
+const char* password = "your_wifi_password";
+
+// Initialize TFT display
+TFT_eSPI tft = TFT_eSPI();  // Use default TFT settings
+
+// Static UPI ID (Replace with your UPI ID)
+String upiID = "your_upi@upi";
+
+// Variables for dynamic amount
+float amount = 0.0;  // Amount entered by the user
+
+// QR Code size settings
+#define QR_SIZE 200
+
+void setup() {
+  Serial.begin(115200);
+  Serial.println("Starting UPI QR Code Generator");
+
+  // Connect to Wi-Fi (optional if internet access is required)
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.println("Connecting to WiFi...");
+  }
+  Serial.println("Connected to WiFi");
+
+  // Initialize TFT display
+  tft.init();
+  tft.setRotation(1);  // Adjust screen orientation
+  tft.fillScreen(TFT_WHITE);  // Clear the screen
+
+  // Ask user for the amount to generate UPI QR code
+  Serial.print("Enter the amount: ");
+  while (Serial.available() == 0) {  // Wait for user input
+    delay(100);
+  }
+  amount = Serial.parseFloat();
+  Serial.println(amount);
+
+  // Generate UPI QR Code
+  String upiQRData = createUPIString(amount);
+  generateAndDisplayQR(upiQRData);
+}
+
+void loop() {
+  // Main loop, you can implement functionality for continuous updates or handling events
+}
+
+String createUPIString(float amount) {
+  // Format the UPI string
+  String upiString = "upi://pay?pa=" + upiID + "&pn=Merchant&mc=123456&tid=1234567890&tr=1234567890&tn=Payment%20for%20goods&am=";
+  upiString += String(amount, 2);  // Append the amount to the UPI string
+  upiString += "&cu=INR&url=https://www.merchantwebsite.com";  // Add currency and URL
+  return upiString;
+}
+
+void generateAndDisplayQR(String upiData) {
+  int size = QR_SIZE;
+  QRCode qrcode;
+  
+  // Create QR code from the UPI string
+  qrcode.init();
+  qrcode.setData(upiData.c_str());
+  qrcode.generate();
+
+  // Display the QR code on the TFT screen
+  int offsetX = (tft.width() - size) / 2;  // Center the QR code
+  int offsetY = (tft.height() - size) / 2;
+
+  tft.fillRect(0, 0, tft.width(), tft.height(), TFT_WHITE);  // Clear the screen
+  for (int y = 0; y < size; y++) {
+    for (int x = 0; x < size; x++) {
+      if (qrcode.getModule(x, y)) {
+        tft.fillRect(offsetX + x * 2, offsetY + y * 2, 2, 2, TFT_BLACK);  // Draw QR code module
+      }
+    }
+  }
+
+  Serial.println("UPI QR Code generated and displayed.");
+}
+
 	

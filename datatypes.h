@@ -85,6 +85,8 @@ typedef char CHAR;
      #define PSB_ERROR_PRINT        /* NOP */
 #endif /* ENABLE_ERROR_PRINT */
 
+#define __DRV_CONSOLE_LINE__  "\n"
+
 /*=====================================Global Variable=============================================() */
 
 

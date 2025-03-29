@@ -72,6 +72,12 @@ extern "C" {
 /* Enable the  ping for testing module  */
 #define ENABLE_PING_MODULE          1
 
+/* Enable the  ping for testing module  */
+#define ENABLE_QRCODE_MODULE          1
+
+/* Enable the  for user input console instead of using keypad  */
+#define ENABLE_USER_INPUT_CONSOLE_FOR_TEST          1
+
 // Define modem interface
 #define TINY_GSM_MODEM_EC200U 
 
@@ -80,6 +86,9 @@ extern "C" {
 #define TFT_CS     5
 #define TFT_RST    17
 #define TFT_DC     16
+
+// QR Code size settings
+#define MAX_QR_GENERATOR_SIZE 200
 
 /*=====================================Macro======================================================() */
 

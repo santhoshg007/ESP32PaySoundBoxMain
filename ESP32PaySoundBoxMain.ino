@@ -64,6 +64,10 @@
 #include <PubSubClient.h> // Lib version - 2.8
 #endif /* ENABLE_PUB_SUB_CLIENT */
 
+#ifdef ENABLE_QRCODE_MODULE
+#include <QRCode.h>     // QRCode library for generating QR codes
+#endif /* ENABLE_QRCODE_MODULE */
+
 #ifdef ENABLE_MATRIX_KEYPAD
 #include <Keypad.h>
 #endif /* ENABLE_MATRIX_KEYPAD */
@@ -102,6 +106,30 @@
 #define MQTT_SUBS_TOPIC_PAYMENTS_STATUS       "paymentstatus"
 /*===================================== Type Definitions ============================*/
 
+
+typedef enum tageSoundBoxMsgEventEnum
+{
+    /* 0x00 */ PSB_PAY_UPI
+  , /* 0x01 */ PSB_PAY_NFC_CARDLESS
+     
+}PSB_MSG_EVENT_ENUM;
+
+typedef struct tageSoundBoxMsgEventStruct
+{
+    /*{{{ WORD_START_01 */
+     PSB_MSG_EVENT_ENUM     enEvent;
+    /* WORD_END_01 }}} */
+
+    /*{{{ WORD_START_02 */
+     float                  f32amount;
+    /* WORD_END_02 }}} */
+
+     /*{{{ WORD_START_03 */
+     unsigned int bui5CurrentType : 6;
+     unsigned int bui5Reserved    : 26;
+    /* WORD_END_03 }}} */
+  
+}PSM_MSG_EVENT_STRUCT;
 
 /*===================================== Global Variables ===========================*/
 const char* cgpcSSID = "SLN 1st Floor";
@@ -157,7 +185,7 @@ QueueHandle_t msgQueue;
 #define QUEUE_SIZE 10
 /*===================================== Private Variables ===========================*/
 
-
+static const char * gscpcFileName = "PAYSOUND.INO";
 /*===================================== Function Prototypes =========================*/
 
 
@@ -276,7 +304,7 @@ BOOL WifiLinkProcess( void )
 /*}}*/
 
 // Function to handle Wi-Fi scan and send the result as an HTTP response
-void handleWiFiScan( ) 
+void GetWifiScanList( ) 
 {
   int networksFound = WiFi.scanNetworks();
   
@@ -308,7 +336,7 @@ void handleWiFiScan( )
 
 String getEncryptionType(wifi_auth_mode_t authMode) 
 {
-  switch (authMode) 
+  switch ( authMode ) 
   {
     case WIFI_AUTH_OPEN: return "Open";
     case WIFI_AUTH_WEP: return "WEP";
@@ -469,6 +497,57 @@ void MQTT_ResponseCallback( char* pcMqttSubcTopic, byte* pcPayload, unsigned int
 }
 /*}}*/
 #endif /* ENABLE_PUB_SUB_CLIENT */
+
+
+void GenerateAndDisplayQR( String upiData ) 
+{
+  int size = MAX_QR_GENERATOR_SIZE;
+  QRCode qrcode;
+  
+  // Create QR code from the UPI string
+  qrcode.init();
+  qrcode.setData(upiData.c_str());
+  qrcode.generate();
+
+  // Display the QR code on the TFT screen
+  int offsetX = (gTftDisplayHndl.width() - size) / 2;  // Center the QR code
+  int offsetY = (gTftDisplayHndl.height() - size) / 2;
+
+  gTftDisplayHndl.fillRect(0, 0, gTftDisplayHndl.width(), gTftDisplayHndl.height(), TFT_WHITE);  // Clear the screen
+  
+  for ( int y = 0; y < size; y++ ) 
+  {
+    for ( int x = 0; x < size; x++ ) 
+    {
+      if (qrcode.getModule(x, y)) 
+      {
+        gTftDisplayHndl.fillRect(offsetX + x * 2, offsetY + y * 2, 2, 2, TFT_BLACK);  // Draw QR code module
+      }
+    }
+  }
+
+  Serial.println("UPI QR Code generated and displayed.");
+}
+
+/*
+ * Args    : void *
+ * Return  : void
+ * Description :
+ */
+/*{{ CreateUPIString() */
+String CreateUPIString( unsigned int ui32Amount )
+{
+
+  float amount  = ui32Amount; 
+  
+  // Format the UPI string
+  String upiString = "upi://pay?pa=" + upiID + "&pn=Merchant&mc=123456&tid=1234567890&tr=1234567890&tn=Payment%20for%20goods&am=";
+  upiString += String( amount, 2 );  // Append the amount to the UPI string
+  upiString += "&cu=INR&url=https://www.merchantwebsite.com";  // Add currency and URL
+  return upiString;
+}
+/*}}*/
+
 /*
  * Args    : void *
  * Return  : void
@@ -485,6 +564,23 @@ void PSB_ProcessThread00(void *pvParameters)
 }
 /*}}*/
 
+unsigned int GetUserValueFromKeypad( void )
+{
+  unsigned int ui32RetUserValue = -1;
+  
+#ifdef ENABLE_USER_INPUT_CONSOLE_FOR_TEST
+  while ( Serial.available() == 0 )
+  {
+    delay(100);
+  }
+  
+  ui32RetUserValue = Serial.parseInt();
+#else
+  char key = keypad.getKey();
+#endif /* ENABLE_USER_INPUT_CONSOLE_FOR_TEST */  
+
+  return ui32RetUserValue;
+}
 /*
  * Args    : void *
  * Return  : void
@@ -494,37 +590,58 @@ void PSB_ProcessThread00(void *pvParameters)
 void PSB_PaySoundBoxManagerThread ( void *pvParameters )
 {
   Message msg;
+  int ui32Event = 0;
   
   initDisplay();
 
+  unsigned ui32TransAmount = 0;
+
   while ( true )
-  {  
-#if 0     
-    if (xQueueReceive(msgQueue, &msg, portMAX_DELAY))
+  {      
+    //if (xQueueReceive(msgQueue, &msg, portMAX_DELAY))
     {
-     
-        // Handle the key press from the queue
-        if (msg.key == '1') {
-            paymentMethod = "QR";
-        } else if (msg.key == '2') {
-            paymentMethod = "NFC";
-        } else if (msg.key == '3') {
-            paymentMethod = "History";
-        } else if (msg.key == '#') {
-            if (paymentMethod == "QR") {
-                paymentHistory += "QR Payment: " + enteredAmount + "\n";
-                enteredAmount = ""; // Reset amount after successful entry
-                paymentMethod = "";
-            } else if (paymentMethod == "NFC") {
-                paymentHistory += "NFC Payment: Successful\n";
-                paymentMethod = "";
-            }
-        } else if (msg.key >= '0' && msg.key <= '9') {
-            enteredAmount += msg.key;
-        }
+          ui32Event = GetUserValueFromKeypad( );
+        
+          switch ( ui32Event )
+          {
+            case PSB_PAY_UPI:
+            {
+
+              ui32TransAmount = GetUserValueFromKeypad( );
+                          
+              PSB_DEBUG_PRINT(( "%s %u > $PSB-MN-SBMGR$AMT[%u]", __DRV_CONSOLE_LINE__
+                        , gscpcFileName
+                        , __LINE__
+
+                        , ui32TransAmount
+                        ));
+
+              // Generate UPI QR Code
+              String upiQRData = CreateUPIString( ui32TransAmount );
   
-    }
-#endif  
+              GenerateAndDisplayQR( upiQRData );           
+            }
+              break; /* PSB_PAY_UPI */
+      
+            case PSB_PAY_NFC_CARDLESS:
+            {
+              Serial.println("Bad client ID error");
+            }
+              break; /* PSB_PAY_NFC_CARDLESS */
+              
+            case PSB_PAY_HISTORY_STATUS:
+            {
+              Serial.println("Last payment history status");
+            }
+              break; /* PSB_PAY_HISTORY_STATUS */
+                            
+            default:
+            {
+              Serial.println("Unknown error code");
+            }
+              break; /* default */          
+          }
+   
     //Serial.println("Sound Box Main thead...");
     //vTaskDelay(1000 / portTICK_PERIOD_MS);  // Delay for 1 second
   }
@@ -631,9 +748,19 @@ void PSB_WifiResetIfTimeout( void )
 /*{{ initDisplay() */
 void initDisplay()
 {
-    gTftDisplayHndl.begin();
-    gTftDisplayHndl.fillScreen(TFT_BLACK);
-    gTftDisplayHndl.setTextColor(TFT_WHITE);
+    // Initialize TFT display
+    gTftDisplayHndl.init();
+
+    /* older initlise method like ST7735 or ILI9341 when the library is using specific configuration files */
+    //gTftDisplayHndl.begin();
+    
+    gTftDisplayHndl.setRotation(1);  // Adjust screen orientation
+
+     /* Clear the screen */
+    gTftDisplayHndl.fillScreen(TFT_WHITE);
+
+   
+    //gTftDisplayHndl.setTextColor(TFT_WHITE); 
 }
 /*}}*/
 
@@ -656,7 +783,7 @@ void setup()
   Serial.begin(115200);  // Start the Serial communication
   while (!Serial);       // Wait for serial monitor
 
-  handleWiFiScan();
+  GetWifiScanList();
   
 #ifdef ENABLE_WIFI_MODULE
   /* Setup Wifi*/
