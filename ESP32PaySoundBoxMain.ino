@@ -47,7 +47,16 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
+#ifdef ENABLE_PING_MODULE
+//#include <Ping.h>
+#endif /* ENABLE_PING_MODULE */
+
 #ifdef ENABLE(TFT_eSPI)
+/*  Install the "TFT_eSPI" library by Bodmer to interface with the TFT Display - https://github.com/Bodmer/TFT_eSPI
+ *   *** IMPORTANT: User_Setup.h available on the internet will probably NOT work with the examples available at Random Nerd Tutorials ***
+ *   *** YOU MUST USE THE User_Setup.h FILE PROVIDED IN THE LINK BELOW IN ORDER TO USE THE EXAMPLES FROM RANDOM NERD TUTORIALS ***
+ *   FULL INSTRUCTIONS AVAILABLE ON HOW CONFIGURE THE LIBRARY: https://RandomNerdTutorials.com/cyd/ or https://RandomNerdTutorials.com/esp32-tft/  
+ */
 #include <TFT_eSPI.h>  // Include the TFT_eSPI library
 #endif /* ENABLE_TFT_eSPI */
 
@@ -58,6 +67,8 @@
 #ifdef ENABLE_MATRIX_KEYPAD
 #include <Keypad.h>
 #endif /* ENABLE_MATRIX_KEYPAD */
+
+
 
 #ifdef TINY_GSM_MODEM_EC200U
   #ifdef ENABLE_TINY_GSM_MODULE
@@ -93,8 +104,8 @@
 
 
 /*===================================== Global Variables ===========================*/
-const char* cgpcSSID = "PSBOX";
-const char* cgpcWifiPassword = "12345678";
+const char* cgpcSSID = "SLN 1st Floor";
+const char* cgpcWifiPassword = "Sln@1111";
 
 // MQTT broker details
 const char*  cgpcMqttServer = "192.168.0.0"; // or hostname
@@ -107,14 +118,15 @@ const char* cgpcMqttPassword = "6379175223"; // Optional
 char gacUniqueID [ MAX_UNIQUE_ID_LEN ]; // Buffer to store the unique ID
 
 // Global variables for wifi management
-boolean gbIsWifiConnected = false;
-long gi32WifiDisconnectTime = 0;
+bool gbIsWifiConnected = false;
+unsigned long gi32WifiDisconnectTime = 0;
 
 // Create an instance of the TFT_eSPI class
-TFT_eSPI tft = TFT_eSPI();  
+TFT_eSPI gTftDisplayHndl = TFT_eSPI();  
+
+WiFiClient gWifiespClient;
 
 #ifdef ENABLE_PUB_SUB_CLIENT
-WiFiClient gWifiespClient;
 PubSubClient gMQTTClient(gWifiespClient);
 #endif /* ENABLE_PUB_SUB_CLIENT */
 
@@ -174,6 +186,25 @@ QueueHandle_t msgQueue;
  * PubSubClient v2.8 by Nick O'Leary
  *
  *
+ * Project: MQTT Communication using EC200U-CN Module
+ * Description: This project demonstrates the use of the EC200U-CN module for MQTT communication. 
+ *              The code establishes an MQTT connection and publishes data at regular intervals.
+ *
+ * Features:
+ * - Publishes incrementing counter data to a specified MQTT topic.
+ *
+ * Requirements:
+ * - Ensure correct APN settings for your network provider.
+ * - Replace MQTT server, username, password, and topics with your broker's configuration.
+ *
+ * Hardware Connections:
+ * - ESP32:
+ *   - RX2 (16) (ESP32) -> TX (EC200U-CN)
+ *   - TX2 (17) (ESP32) -> RX (EC200U-CN)
+ *   - GND (ESP32) -> GND (EC200U-CN)
+ 
+ * Author and credits: Sachin Soni
+ * YouTube: Check out tech tutorials and projects at **techiesms**: https://www.youtube.com/techiesms
  */
 
  /*
@@ -244,6 +275,78 @@ BOOL WifiLinkProcess( void )
 }
 /*}}*/
 
+// Function to handle Wi-Fi scan and send the result as an HTTP response
+void handleWiFiScan( ) 
+{
+  int networksFound = WiFi.scanNetworks();
+  
+  String response = "HTTP/1.1 200 OK\r\n";
+  response += "Content-Type: application/json\r\n";
+  response += "Connection: close\r\n\r\n";  // End of headers
+  
+  // Create the JSON response body
+  response += "{ \"status\": \"success\", \"networks\": [";
+  
+  int i32MaxNetworks = min(networksFound, 15);  // Limit to 15 networks
+  
+  for (int i = 0; i < i32MaxNetworks; i++) 
+  {
+    response += "{";
+    response += "\"ssid\":\"" + WiFi.SSID(i) + "\",";
+    response += "\"rssi\":" + String(WiFi.RSSI(i)) + ",";
+    response += "\"encryption\":\"" + getEncryptionType(WiFi.encryptionType(i)) + "\"";
+    response += "}"; // end of network object
+    if (i < i32MaxNetworks - 1) response += ",";  // Add comma if not the last network
+  }
+
+  response += "] }";  // End of JSON body
+  
+  // Send the response to the client
+  //client.print(response);
+  printf("RESPONSE[%s]\n", response.c_str( ) );
+}
+
+String getEncryptionType(wifi_auth_mode_t authMode) 
+{
+  switch (authMode) 
+  {
+    case WIFI_AUTH_OPEN: return "Open";
+    case WIFI_AUTH_WEP: return "WEP";
+    case WIFI_AUTH_WPA_PSK: return "WPA_PSK";
+    case WIFI_AUTH_WPA2_PSK: return "WPA2_PSK";
+    case WIFI_AUTH_WPA_WPA2_PSK: return "WPA_WPA2_PSK";
+    case WIFI_AUTH_WPA3_PSK: return "WPA3_PSK";
+    default: return "Unknown";
+  }
+}
+
+#ifdef ENABLE_PING_MODULE
+// Function to check internet connection by connecting to a host and port
+bool pingTest(const char* host)
+{
+  uint16_t port = 53;  // Port 53 is the DNS port
+
+  Serial.print("Connecting to ");
+  Serial.print(host);
+  Serial.print(":");
+  Serial.println(port);
+
+  // Try to connect to the remote IP and port
+  if (gWifiespClient.connect(host, port))
+  {
+    Serial.println("[INTERNET] Connection successful!");
+    gWifiespClient.stop();  // Close the connection after successful test
+    return true;  // Return true if the connection is successful
+  } 
+  else
+  {
+    Serial.println("[INTERNET] Connection failed!");
+    return false;  // Return false if the connection failed
+  }
+}
+
+#endif /* ENABLE_PING_MODULE */
+
 /*
  * Args    : MQTT State
  * Return  : void
@@ -298,7 +401,7 @@ void MQTT_HandleErrorCode( int errorCode )
     }
 }
 /*}}*/
-
+#ifdef ENABLE_PUB_SUB_CLIENT
 /*
  * Args    : void *
  * Return  : void
@@ -365,6 +468,7 @@ void MQTT_ResponseCallback( char* pcMqttSubcTopic, byte* pcPayload, unsigned int
 
 }
 /*}}*/
+#endif /* ENABLE_PUB_SUB_CLIENT */
 /*
  * Args    : void *
  * Return  : void
@@ -390,16 +494,15 @@ void PSB_ProcessThread00(void *pvParameters)
 void PSB_PaySoundBoxManagerThread ( void *pvParameters )
 {
   Message msg;
-
-    // Initialize WiFi and display
-  //WiFi.begin(ssid, password);
-  //initDisplay();
+  
+  initDisplay();
 
   while ( true )
-  {
+  {  
+#if 0     
     if (xQueueReceive(msgQueue, &msg, portMAX_DELAY))
     {
-#if 0      
+     
         // Handle the key press from the queue
         if (msg.key == '1') {
             paymentMethod = "QR";
@@ -419,15 +522,15 @@ void PSB_PaySoundBoxManagerThread ( void *pvParameters )
         } else if (msg.key >= '0' && msg.key <= '9') {
             enteredAmount += msg.key;
         }
-#endif  
-    }
   
-    Serial.println("Sound Box Main thead...");
-    vTaskDelay(1000 / portTICK_PERIOD_MS);  // Delay for 1 second
+    }
+#endif  
+    //Serial.println("Sound Box Main thead...");
+    //vTaskDelay(1000 / portTICK_PERIOD_MS);  // Delay for 1 second
   }
 }
 /*}}*/
-
+#ifdef ENABLE_MATRIX_KEYPAD
 /*
  * Args    : void *
  * Return  : void
@@ -449,8 +552,9 @@ void PSB_KeyboardMonitorTask(void *pvParameters)
         delay(100);
     }
 }
-
 /*}}*/
+#endif /* ENABLE_MATRIX_KEYPAD */
+
 /*
  * Args    : void *
  * Return  : void
@@ -476,9 +580,26 @@ void PSB_ProcessThread01(void *pvParameters)
 void PSB_WifiSetup( void )
 {
   Serial.println(F("[WIFI] Initialization"));
-  WiFi.mode( WIFI_STA );
-  WiFi.enableSTA( true );
-  WiFi.begin( cgpcSSID, cgpcWifiPassword );
+  WiFi.mode(WIFI_STA);
+  WiFi.enableSTA(true);
+  WiFi.begin(cgpcSSID, cgpcWifiPassword);
+
+  unsigned long startMillis = millis();
+  
+  while ( WiFi.status() != WL_CONNECTED ) 
+  {
+     // Timeout after 10 seconds
+    if (millis() - startMillis > 10000) 
+    { 
+      Serial.println(F("[WIFI] connection timeout"));
+      return;  // Exit if connection times out
+    }
+    
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.print(F("[WIFI] connected, IP: "));
+  Serial.println(WiFi.localIP());
 }
 /*}}*/
 
@@ -496,6 +617,7 @@ void PSB_WifiResetIfTimeout( void )
     gi32WifiDisconnectTime = millis();
     Serial.println(F("[WIFI] connection timeout"));
     WiFi.disconnect(true);
+    delay(1000);  // Optional delay before reconnecting
     PSB_WifiSetup();
   }
 }
@@ -509,9 +631,22 @@ void PSB_WifiResetIfTimeout( void )
 /*{{ initDisplay() */
 void initDisplay()
 {
-    tft.begin();
-    tft.fillScreen(TFT_BLACK);
-    tft.setTextColor(TFT_WHITE);
+    gTftDisplayHndl.begin();
+    gTftDisplayHndl.fillScreen(TFT_BLACK);
+    gTftDisplayHndl.setTextColor(TFT_WHITE);
+}
+/*}}*/
+
+/*
+ * Args    : void
+ * Return  : void
+ * Description :Function to initialize the display
+ */
+/*{{ initDisplay() */
+void drawTextSync(const String & strUsertext)
+{
+    gTftDisplayHndl.fillScreen(TFT_BLACK);
+    gTftDisplayHndl.drawString(strUsertext, 10, 10);
 }
 /*}}*/
 
@@ -521,12 +656,18 @@ void setup()
   Serial.begin(115200);  // Start the Serial communication
   while (!Serial);       // Wait for serial monitor
 
+  handleWiFiScan();
+  
+#ifdef ENABLE_WIFI_MODULE
   /* Setup Wifi*/
   PSB_WifiSetup( );
+#endif /* ENABLE_WIFI_MODULE */
 
-
+#if 0
+#ifdef ENABLE_PUB_SUB_CLIENT
   gMQTTClient.setServer( cgpcMqttServer, cgpi16MqttPort );
   gMQTTClient.setCallback( MQTT_ResponseCallback );
+#endif
 
   // Create message queue
   msgQueue = xQueueCreate( QUEUE_SIZE, sizeof( Message ) );
@@ -542,7 +683,7 @@ void setup()
               , 1
               , &gtskKeyboardHndl
               );
-
+#endif
   /* Pay Sound Box Manager thread create */
   xTaskCreate(  PSB_PaySoundBoxManagerThread
               , PAY_SOUND_BOX_MANAGER_THREAD_NAME
@@ -550,12 +691,14 @@ void setup()
               , NULL
               , 1
               , &gtskMainProcessHndl );
+            
 }
 /*}}}*/
 
 void loop()
 {
  
+#ifdef ENABLE_WIFI_MODULE
   if( WiFi.status() != WL_CONNECTED )
   {
     if(gbIsWifiConnected)
@@ -579,5 +722,16 @@ void loop()
       Serial.println(WiFi.localIP());
     }
 
+    if (pingTest("8.8.8.8"))
+    {
+      Serial.println("[INTERNET] Connection is active");
+    }
+    else
+    {
+      Serial.println("[INTERNET] No internet connection");
+    }
+     
+     delay(5000);  // Check every 10 seconds
   }
+#endif /* ENABLE_WIFI_MODULE */
 }

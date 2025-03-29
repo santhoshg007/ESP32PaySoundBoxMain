@@ -58,13 +58,19 @@ extern "C" {
 #define ENABLE_TFT_eSPI          1
 
 /* Enable the  MQTT CLIENT  */
-#define ENABLE_PUB_SUB_CLIENT          1
+//#define ENABLE_PUB_SUB_CLIENT          1
 
 /* Enable the  MQTT CLIENT  */
-#define ENABLE_MATRIX_KEYPAD          1
+//#define ENABLE_MATRIX_KEYPAD          1
 
 /* Enable the  Tiny GSM CLIENT  */
 //#define ENABLE_TINY_GSM_MODULE          1
+
+/* Enable the  wifi enable module  */
+#define ENABLE_WIFI_MODULE          1
+
+/* Enable the  ping for testing module  */
+#define ENABLE_PING_MODULE          1
 
 // Define modem interface
 #define TINY_GSM_MODEM_EC200U 
@@ -81,7 +87,8 @@ extern "C" {
 
 
 // Wifi settings
-#define WIFI_CONNECTION_TIMEOUT 5000
+#define WIFI_CONNECTION_TIMEOUT 30000  // 30 seconds timeout
+
 
 /*{{{*/
 #define PSB_MQTT_SERVER          "io.adafruit.com"

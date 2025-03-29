@@ -34,6 +34,16 @@ Install Library :
 
 2. Find the Keypad library (author: Mark Stanley, Alexander Brevig).	
 
+3. ArduinoJson library, it's Benoît Blanchon.
+
+4. The TFT_eSPI library is authored and maintained by Bodmer.
+
+5. The author of the PubSubClient library is Nick O'Leary.
+
+6. Search for "Ping" and install the library called Ping by 2banty.
+
+
+
 
 Install python runnning Sever :
 --------------------------------
@@ -56,6 +66,26 @@ Expand-Archive .\ngrok-v3-stable-windows-amd64.zip -DestinationPath .\
 ngrok authtoken KT2DUWDKBXMKMPEG7XUKGY242QBO5S2Y
 
 2uiRysWq7l6t3CrRD56usFLd0jd_6JaNxbAW5hngE9jFHCUSL
+
+------------------------------------
+TFT Display connectin Procedure :
+------------------------------------
+ESP32 board
+
+Non-Touch TFT display (e.g., ILI9341, ST7735, etc.)
+
+Jumper wires for wiring the ESP32 and TFT display.
+
+Wiring:
+TFT Display Pin	ESP32 Pin
+	VCC	3.3V
+	GND	GND
+	CS	Pin 5
+	RESET	Pin 4
+	DC (RS)	Pin 2
+	SDI(MOSI)	Pin 23
+	SCK	Pin 18
+	LED	3.3V
 
 Payment method :
 ----------------

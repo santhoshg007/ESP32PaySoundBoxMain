@@ -62,7 +62,32 @@ typedef char CHAR;
 #define PSB_FALSE 0
 #define PSB_TRUE  1
 
+
+#define ENABLE_DEBUG_PRINT
+#define ENABLE_INFO_PRINT
+#define ENABLE_ERROR_PRINT
+
+#ifdef ENABLE_DEBUG_PRINT
+    #define PSB_DEBUG_PRINT         printf ( __XX__ )
+#else
+     #define PSB_DEBUG_PRINT        /* NOP */
+#endif /* ENABLE_DEBUG_PRINT */
+
+#ifdef ENABLE_INFO_PRINT
+    #define PSB_INFO_PRINT         printf ( __XX__ )
+#else
+     #define PSB_INFO_PRINT        /* NOP */
+#endif /* ENABLE_INFO_PRINT */
+
+#ifdef ENABLE_ERROR_PRINT
+    #define PSB_ERROR_PRINT         printf ( __XX__ )
+#else
+     #define PSB_ERROR_PRINT        /* NOP */
+#endif /* ENABLE_ERROR_PRINT */
+
 /*=====================================Global Variable=============================================() */
+
+
 
 /*=====================================Private Variable============================================() */
 
