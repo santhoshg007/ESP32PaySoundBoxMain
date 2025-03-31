@@ -70,6 +70,31 @@ ngrok authtoken KT2DUWDKBXMKMPEG7XUKGY242QBO5S2Y
 
 2uiRysWq7l6t3CrRD56usFLd0jd_6JaNxbAW5hngE9jFHCUSL
 
+or
+	1. Run the terminal with adminstrator:
+	2. Run the below command:
+		Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+	
+	3. choco install ngrok
+	4. ngrok http 5000
+
+Login the payment gateways webhooks:
+-------------------------------------
+1. ngrok http 5000
+	1. copy n/w forwarding url.
+2.  python .\PayPalServerMQTT.py 
+1. https://developer.paypal.com/dashboard/webhooksSimulator
+		1.1. enter mail and password.
+		1.2 Select the testing tool.
+		1.3 paste the ngrok forawrding url in webhooks with appending of /webhooks.
+			ex. https://d107-2406-7400-9a-6d7d-f1ff-664f-6207-3c33.ngrok-free.app/webhook
+		1.4. Now select event and click the send test.
+	
+
+CA Certificate :
+------------------
+	https://www.amazontrust.com/repository/AmazonRootCA1.pem
+	
 ------------------------------------
 TFT Display connectin Procedure :
 ------------------------------------
@@ -490,3 +515,254 @@ void generateAndDisplayQR(String upiData) {
 }
 
 	
+=================
+#include <WiFi.h>
+#include <WiFiClientSecure.h>
+#include <PubSubClient.h>
+
+// Your Wi-Fi credentials
+const char *ssid = "your_SSID";
+const char *password = "your_PASSWORD";
+
+// Adafruit IO MQTT Broker details
+const char *mqtt_server = "io.adafruit.com";
+const int mqtt_port = 8883;  // Use 8883 for SSL/TLS encrypted connection (secure)
+
+const char *mqtt_user = "your_adafruit_username";  // Your Adafruit IO username
+const char *mqtt_password = "your_adafruit_IO_key";  // Your Adafruit IO key
+
+WiFiClientSecure espClient;  // Secure Wi-Fi client (for SSL/TLS)
+PubSubClient client(espClient);  // MQTT client using secure Wi-Fi client
+
+// Amazon's Root CA Certificate (used by Adafruit IO)
+const char* ca_cert = \
+"-----BEGIN CERTIFICATE-----\n" \
+"MIIDdzCCAl+gAwIBAgIJAKz3+/T2bbSaMA0GCSqGSIb3DQEBBQUAMF0xCzAJBgNV\n" \
+"BAYTAklOMQswCQYDVQQIDAJFSjELMAkGA1UEBwwCSVYxFDASBgNVBAoMC0FtYXpv\n" \
+"biBDb3Jwb3JhdGlvbnMxITAfBgNVBAMMGGd1c3RyYXdpeC1jYS5hd2Ntcy5jb20w\n" \
+"HhcNMjMwNjAyMTE0NzMyWhcNMjQwNjAyMTE0NzMyWjBdMQswCQYDVQQGEwJJTjEL\n" \
+"MAkGA1UECAwCRUoxCzAJBgNVBAcMAlJZMRQwEgYDVQQKDAtBbWF6b24gQ29ycG9y\n" \
+"YXRpb25zMR0wGwYDVQQLDBRDb3Jwb3JhdGUgU2VjdXJpdHkxHDAaBgNVBAMME2d1\n" \
+"c3RyYXdpeC1jYS5hd2Ntcy5jb20wggEwDQYJKoZIhvcNAQEBBQADggEBAD5QpkFz\n" \
+"DAp6k7TyaHZmckqOa7s/XuGB5rHfpAfqdkZt+nbvVtd1gbh8gfBcnqkk2gtZ6vHq\n" \
+"nBz1DaXFcCuKtrckFXHqgHfJMyf3HZF8szCcnRDoToExs0eR8Biy9z/Fth04/kfC\n" \
+"QyCkExOJl3uYtATqlkbk49OmyKnI5vUK6GLyY1X1Ay1tqxtmqlE6zwg64zYY2Hb0\n" \
+"t4QwHz7lZ7wF5gqOo0tse7cxUSbmjzgZf3Yg3n4uD2by9UsvGnKNN0G0iADewhZG\n" \
+"fvCjzF5HKhjAwTLaf7pPCE33bp3diHB4zSv7tL0i/taSdz+9N6A3PTQ0WFMpNJfM\n" \
+"2lLOFjmFRw0Pj8WwgyN6gl0jbjsw1Te9HtXKnTnTmOx7zy7YGOaRA9gD0lYdso=\n" \
+"-----END CERTIFICATE-----\n";
+
+// Callback function when a message is received
+void callback(char *topic, byte *message, unsigned int length) {
+  Serial.print("Message arrived on topic: ");
+  Serial.print(topic);
+  Serial.print(". Message: ");
+  for (int i = 0; i < length; i++) {
+    Serial.print((char)message[i]);
+  }
+  Serial.println();
+}
+
+// Connect to Wi-Fi
+void setup_wifi() {
+  Serial.print("Connecting to WiFi...");
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.print(".");
+  }
+  Serial.println("Connected to WiFi");
+}
+
+// Reconnect to MQTT server if the connection is lost
+void reconnect() {
+  while (!client.connected()) {
+    Serial.print("Attempting MQTT connection...");
+    if (client.connect("ESP32Client", mqtt_user, mqtt_password)) {
+      Serial.println("Connected to MQTT (Secure)");
+      client.subscribe("your_username/feeds/led");  // Example feed name
+    } else {
+      Serial.print("Failed to connect to MQTT, rc=");
+      Serial.print(client.state());
+      Serial.println(" trying again in 5 seconds");
+      delay(5000);
+    }
+  }
+}
+
+void setup() {
+  Serial.begin(115200);
+  setup_wifi();  // Connect to Wi-Fi
+
+  // Set the CA certificate for SSL/TLS verification
+  espClient.setTrustAnchors(ca_cert);
+
+  client.setServer(mqtt_server, mqtt_port);  // Set server with secure port
+  client.setCallback(callback);  // Set callback function for message handling
+}
+
+void loop() {
+  if (!client.connected()) {
+    reconnect();  // Ensure we're connected to the MQTT server
+  }
+  client.loop();  // Handle MQTT communication
+
+  // Publish a message to the "led" feed (example)
+  client.publish("your_username/feeds/led", "Hello from ESP32!");
+
+  delay(2000);  // Publish a message every 2 seconds
+}
+==================
+Creating a FreeRTOS task for MQTT communication is a good approach, especially if you want to handle MQTT communication in the background without blocking other tasks. Below is an example of how you can create a FreeRTOS task to handle MQTT operations.
+
+In this example, we'll create a FreeRTOS task that connects to an MQTT broker (like Adafruit IO or any other broker) and listens for messages on a topic.
+
+### MQTT Task Setup Using FreeRTOS
+
+1. **Install the PubSubClient Library**: You need to install the PubSubClient library for MQTT. If you're using the ESP32 with the Arduino IDE, this library will work for connecting to the MQTT broker.
+
+2. **Create the MQTT Task**: We'll create an MQTT task that will run the `loop()` function of the MQTT client, keeping the connection alive, and also handle subscribing and publishing messages.
+
+### Example Code
+
+```cpp
+#include <WiFi.h>
+#include <PubSubClient.h>
+
+// Wi-Fi and MQTT configuration
+const char* ssid = "yourSSID";
+const char* password = "yourPassword";
+const char* mqttServer = "io.adafruit.com";  // Adafruit IO broker or your MQTT server
+const int mqttPort = 1883;  // Default MQTT port (use 8883 for SSL)
+const char* mqttUser = "yourUsername";  // Adafruit IO Username
+const char* mqttPassword = "yourAIOKey"; // Adafruit IO Key
+const char* mqttTopic = "SanthoshG/feeds/paymenttrigger"; // Topic to subscribe to
+
+WiFiClient espClient;
+PubSubClient mqttClient(espClient);
+
+// Task handle
+TaskHandle_t MQTT_TaskHandle = NULL;
+
+// MQTT callback function
+void callback(char* topic, byte* payload, unsigned int length) {
+  Serial.print("Message received on topic: ");
+  Serial.print(topic);
+  Serial.print(" with payload: ");
+  for (unsigned int i = 0; i < length; i++) {
+    Serial.print((char)payload[i]);
+  }
+  Serial.println();
+}
+
+// Connect to MQTT broker
+void connectMQTT() {
+  while (!mqttClient.connected()) {
+    Serial.print("Attempting MQTT connection...");
+
+    // Attempt to connect
+    if (mqttClient.connect("ESP32_Client", mqttUser, mqttPassword)) {
+      Serial.println("connected");
+      mqttClient.subscribe(mqttTopic);  // Subscribe to the topic
+    } else {
+      Serial.print("failed, rc=");
+      Serial.print(mqttClient.state());
+      Serial.println(" try again in 5 seconds");
+      delay(5000);
+    }
+  }
+}
+
+// The MQTT task function
+void MQTT_Task(void* parameter) {
+  while (true) {
+    if (!mqttClient.connected()) {
+      connectMQTT();  // Reconnect if the connection is lost
+    }
+    mqttClient.loop();  // Keep the MQTT connection alive
+    delay(10); // Small delay to prevent watchdog timeout
+  }
+}
+
+// Wi-Fi connection task
+void connectWiFi() {
+  Serial.print("Connecting to WiFi...");
+  WiFi.begin(ssid, password);
+
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.print(".");
+  }
+
+  Serial.println("WiFi connected");
+  Serial.println("IP address: " + WiFi.localIP().toString());
+}
+
+void setup() {
+  Serial.begin(115200);
+
+  // Connect to Wi-Fi
+  connectWiFi();
+
+  // Set the MQTT callback function
+  mqttClient.setServer(mqttServer, mqttPort);
+  mqttClient.setCallback(callback);
+
+  // Create the MQTT task
+  xTaskCreatePinnedToCore(
+    MQTT_Task,               // Function to run
+    "MQTT Task",             // Name of the task
+    2048,                    // Stack size (bytes)
+    NULL,                    // Parameters to pass to the task
+    1,                       // Task priority (1 is low priority)
+    &MQTT_TaskHandle,        // Task handle (optional)
+    0                        // Core where the task runs (0 or 1)
+  );
+}
+
+void loop() {
+  // Nothing to do in loop, as MQTT is handled in the FreeRTOS task
+  // If you want to publish something, you can do it in the main loop or via other tasks
+  // mqttClient.publish("SanthoshG/feeds/paymenttrigger", "Hello, world!");
+}
+```
+
+### Key Steps in the Code:
+
+1. **Wi-Fi and MQTT Setup**:
+   - We define the Wi-Fi credentials and the MQTT server details.
+   - The `PubSubClient` is used to handle the MQTT protocol.
+
+2. **Callback Function**:
+   - The `callback` function is called when a message is received on the subscribed MQTT topic. Here, it simply prints the message payload to the Serial Monitor.
+
+3. **`connectMQTT` Function**:
+   - This function tries to connect to the MQTT broker. If the connection fails, it keeps retrying every 5 seconds.
+
+4. **FreeRTOS MQTT Task (`MQTT_Task`)**:
+   - This task continuously checks if the MQTT client is connected, and if not, it tries to reconnect.
+   - The `mqttClient.loop()` function is called to maintain the connection and handle incoming messages.
+   - We add a small delay to prevent a watchdog timeout.
+
+5. **Wi-Fi Connection (`connectWiFi`)**:
+   - The `connectWiFi` function connects to the Wi-Fi network.
+   - It waits until the ESP32 is connected to the network.
+
+6. **Creating the Task**:
+   - `xTaskCreatePinnedToCore()` is used to create the MQTT task. It pins the task to a specific core if necessary (you can pin it to core 0 or core 1). It runs with a low priority in this example.
+
+7. **Main `loop()`**:
+   - In the `loop()` function, no code is required for MQTT handling since it's handled in the FreeRTOS task.
+
+### How it Works:
+- **Wi-Fi Connection**: First, the device connects to the Wi-Fi network in the `setup()` function.
+- **MQTT Task**: The MQTT task (`MQTT_Task`) is created in the `setup()` function and starts running in the background. This task maintains the MQTT connection and handles receiving messages via `mqttClient.loop()`.
+- **FreeRTOS**: The MQTT communication runs in the background on a separate FreeRTOS task, allowing your main program (in `loop()`) to perform other operations concurrently without blocking the MQTT communication.
+
+### Notes:
+- **Handling MQTT Connection Loss**: If the MQTT connection is lost, the task will attempt to reconnect continuously.
+- **Publishing Data**: You can publish data to your MQTT topic anytime using `mqttClient.publish()`. You can call this function in the `loop()` or any other task.
+- **FreeRTOS Task Priority**: You can change the priority of the MQTT task based on your needs. The task with higher priority will get more CPU time.
+
+### Conclusion:
+This approach of creating an MQTT task using FreeRTOS allows you to run MQTT communication asynchronously and keep the main program free for other operations. By using FreeRTOS tasks, you can efficiently handle multiple concurrent tasks on your ESP32.

@@ -36,6 +36,11 @@ extern "C" {
 /* Enable the wifi support feature */
 #define ENABLE_WIFI_SUPPORT         1
 
+/* Enable the wifi secure connect  */
+#define ENABLE_SECURE_WIFI_CONNECT 1
+
+#define ENABLE_HARD_CODE_CERTIFICATE 1
+
 /* Enable the audio controller/Speaker/auido amplifier module */
 #define ENABLE_AUDIO_SUPPORT         1
 
@@ -58,7 +63,7 @@ extern "C" {
 #define ENABLE_TFT_eSPI          1
 
 /* Enable the  MQTT CLIENT  */
-//#define ENABLE_PUB_SUB_CLIENT          1
+#define ENABLE_PUB_SUB_CLIENT          1
 
 /* Enable the  MQTT CLIENT  */
 //#define ENABLE_MATRIX_KEYPAD          1
@@ -73,7 +78,7 @@ extern "C" {
 #define ENABLE_PING_MODULE          1
 
 /* Enable the  ping for testing module  */
-#define ENABLE_QRCODE_MODULE          1
+//#define ENABLE_QRCODE_MODULE          1
 
 /* Enable the  for user input console instead of using keypad  */
 #define ENABLE_USER_INPUT_CONSOLE_FOR_TEST          1

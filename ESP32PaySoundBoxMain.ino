@@ -64,8 +64,12 @@
 #include <PubSubClient.h> // Lib version - 2.8
 #endif /* ENABLE_PUB_SUB_CLIENT */
 
-#ifdef ENABLE_QRCODE_MODULE
-#include <QRCode.h>     // QRCode library for generating QR codes
+#ifdef ENABLE_SECURE_WIFI_CONNECT
+#include <WiFiClientSecure.h>  // For HTTPS
+#endif /* ENABLE_SECURE_WIFI_CONNECT */
+
+#if 1 //def ENABLE_QRCODE_MODULE
+#include "qrcode.h"  // Include Espressif QR Code library header
 #endif /* ENABLE_QRCODE_MODULE */
 
 #ifdef ENABLE_MATRIX_KEYPAD
@@ -86,17 +90,17 @@
 
 /*{{{ Pay Sound Box thread configuration */
 #define PAY_SOUND_BOX_MANAGER_THREAD_NAME       "PSBMGR" 
-#define PAY_SOUND_BOX_MANAGER_STACK_SIZE        ( 2 * 1024 )  /* 1Kb */
+#define PAY_SOUND_BOX_MANAGER_STACK_SIZE        ( 6 * 1024 )  /* 1Kb */
 /*}}}*/
 
 /*{{{ Pay Sound Box thread configuration */
 #define PSB_WORKER_THREAD_NAME       "WORKER" 
-#define PAY_WORKER_STACK_SIZE        ( 1 * 1024 )  /* 1Kb */
+#define PAY_WORKER_STACK_SIZE        ( 4 * 1024 )  /* 1Kb */
 /*}}}*/
 
 /*{{{ Keypad thread configuration */
 #define KEYPAD_THREAD_NAME       "KEYPAD" 
-#define KEYPAD_STACK_SIZE        ( 2 * 1024 )  /* 1Kb */
+#define KEYPAD_STACK_SIZE        ( 4 * 1024 )  /* 1Kb */
 /*}}}*/
 
 #define MAX_UNIQUE_ID_LEN       ( 20 )
@@ -111,6 +115,7 @@ typedef enum tageSoundBoxMsgEventEnum
 {
     /* 0x00 */ PSB_PAY_UPI
   , /* 0x01 */ PSB_PAY_NFC_CARDLESS
+  , /* 0x02 */ PSB_PAY_HISTORY_STATUS
      
 }PSB_MSG_EVENT_ENUM;
 
@@ -136,11 +141,16 @@ const char* cgpcSSID = "SLN 1st Floor";
 const char* cgpcWifiPassword = "Sln@1111";
 
 // MQTT broker details
-const char*  cgpcMqttServer = "192.168.0.0"; // or hostname
+const char*  cgpcMqttServer = "io.adafruit.com"; // or hostname
+
+#ifdef ENABLE_SECURE_WIFI_CONNECT
+const short int cgpi16MqttPort = 8883; // SSL/TLS port for Adafruit IO
+#else
 const short int cgpi16MqttPort = 1883; // Default MQTT port
+#endif /* ENABLE_SECURE_WIFI_CONNECT */
 
 const char* cgpcMqttUser = "SanthoshG"; // Optional
-const char* cgpcMqttPassword = "6379175223"; // Optional
+const char* cgpcMqttPassword = "aio_uebF37sNt31BXInllYdbEUGgeSGD"; // Optional
 
 
 char gacUniqueID [ MAX_UNIQUE_ID_LEN ]; // Buffer to store the unique ID
@@ -152,7 +162,12 @@ unsigned long gi32WifiDisconnectTime = 0;
 // Create an instance of the TFT_eSPI class
 TFT_eSPI gTftDisplayHndl = TFT_eSPI();  
 
+#ifdef ENABLE_SECURE_WIFI_CONNECT
+WiFiClientSecure gWifiespClient;  // Secure Wi-Fi client
+#else
 WiFiClient gWifiespClient;
+#endif /* ENABLE_SECURE_WIFI_CONNECT */
+
 
 #ifdef ENABLE_PUB_SUB_CLIENT
 PubSubClient gMQTTClient(gWifiespClient);
@@ -183,11 +198,69 @@ TaskHandle_t gtskDisplayHndl;
 // Message Queue Setup for communication between threads
 QueueHandle_t msgQueue;
 #define QUEUE_SIZE 10
+
+String upiID = "merchant@upi";
+bool gbDisplayConnecStatus = false;
+
+// Amazon's Root CA Certificate (used by Adafruit IO)
+#ifdef ENABLE_HARD_CODE_CERTIFICATE
+#if 0
+const char* gcpcCACertificate = \
+"-----BEGIN CERTIFICATE-----\n" \
+"MIIDdzCCAl+gAwIBAgIJAKz3+/T2bbSaMA0GCSqGSIb3DQEBBQUAMF0xCzAJBgNV\n" \
+"BAYTAklOMQswCQYDVQQIDAJFSjELMAkGA1UEBwwCSVYxFDASBgNVBAoMC0FtYXpv\n" \
+"biBDb3Jwb3JhdGlvbnMxITAfBgNVBAMMGGd1c3RyYXdpeC1jYS5hd2Ntcy5jb20w\n" \
+"HhcNMjMwNjAyMTE0NzMyWhcNMjQwNjAyMTE0NzMyWjBdMQswCQYDVQQGEwJJTjEL\n" \
+"MAkGA1UECAwCRUoxCzAJBgNVBAcMAlJZMRQwEgYDVQQKDAtBbWF6b24gQ29ycG9y\n" \
+"YXRpb25zMR0wGwYDVQQLDBRDb3Jwb3JhdGUgU2VjdXJpdHkxHDAaBgNVBAMME2d1\n" \
+"c3RyYXdpeC1jYS5hd2Ntcy5jb20wggEwDQYJKoZIhvcNAQEBBQADggEBAD5QpkFz\n" \
+"DAp6k7TyaHZmckqOa7s/XuGB5rHfpAfqdkZt+nbvVtd1gbh8gfBcnqkk2gtZ6vHq\n" \
+"nBz1DaXFcCuKtrckFXHqgHfJMyf3HZF8szCcnRDoToExs0eR8Biy9z/Fth04/kfC\n" \
+"QyCkExOJl3uYtATqlkbk49OmyKnI5vUK6GLyY1X1Ay1tqxtmqlE6zwg64zYY2Hb0\n" \
+"t4QwHz7lZ7wF5gqOo0tse7cxUSbmjzgZf3Yg3n4uD2by9UsvGnKNN0G0iADewhZG\n" \
+"fvCjzF5HKhjAwTLaf7pPCE33bp3diHB4zSv7tL0i/taSdz+9N6A3PTQ0WFMpNJfM\n" \
+"2lLOFjmFRw0Pj8WwgyN6gl0jbjsw1Te9HtXKnTnTmOx7zy7YGOaRA9gD0lYdso=\n" \
+"-----END CERTIFICATE-----\n";
+#else
+// io.adafruit.com root CA
+const char* gcpcCACertificate = \
+      "-----BEGIN CERTIFICATE-----\n"
+      "MIIEjTCCA3WgAwIBAgIQDQd4KhM/xvmlcpbhMf/ReTANBgkqhkiG9w0BAQsFADBh\n"
+      "MQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMRkwFwYDVQQLExB3\n"
+      "d3cuZGlnaWNlcnQuY29tMSAwHgYDVQQDExdEaWdpQ2VydCBHbG9iYWwgUm9vdCBH\n"
+      "MjAeFw0xNzExMDIxMjIzMzdaFw0yNzExMDIxMjIzMzdaMGAxCzAJBgNVBAYTAlVT\n"
+      "MRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdpY2VydC5j\n"
+      "b20xHzAdBgNVBAMTFkdlb1RydXN0IFRMUyBSU0EgQ0EgRzEwggEiMA0GCSqGSIb3\n"
+      "DQEBAQUAA4IBDwAwggEKAoIBAQC+F+jsvikKy/65LWEx/TMkCDIuWegh1Ngwvm4Q\n"
+      "yISgP7oU5d79eoySG3vOhC3w/3jEMuipoH1fBtp7m0tTpsYbAhch4XA7rfuD6whU\n"
+      "gajeErLVxoiWMPkC/DnUvbgi74BJmdBiuGHQSd7LwsuXpTEGG9fYXcbTVN5SATYq\n"
+      "DfbexbYxTMwVJWoVb6lrBEgM3gBBqiiAiy800xu1Nq07JdCIQkBsNpFtZbIZhsDS\n"
+      "fzlGWP4wEmBQ3O67c+ZXkFr2DcrXBEtHam80Gp2SNhou2U5U7UesDL/xgLK6/0d7\n"
+      "6TnEVMSUVJkZ8VeZr+IUIlvoLrtjLbqugb0T3OYXW+CQU0kBAgMBAAGjggFAMIIB\n"
+      "PDAdBgNVHQ4EFgQUlE/UXYvkpOKmgP792PkA76O+AlcwHwYDVR0jBBgwFoAUTiJU\n"
+      "IBiV5uNu5g/6+rkS7QYXjzkwDgYDVR0PAQH/BAQDAgGGMB0GA1UdJQQWMBQGCCsG\n"
+      "AQUFBwMBBggrBgEFBQcDAjASBgNVHRMBAf8ECDAGAQH/AgEAMDQGCCsGAQUFBwEB\n"
+      "BCgwJjAkBggrBgEFBQcwAYYYaHR0cDovL29jc3AuZGlnaWNlcnQuY29tMEIGA1Ud\n"
+      "HwQ7MDkwN6A1oDOGMWh0dHA6Ly9jcmwzLmRpZ2ljZXJ0LmNvbS9EaWdpQ2VydEds\n"
+      "b2JhbFJvb3RHMi5jcmwwPQYDVR0gBDYwNDAyBgRVHSAAMCowKAYIKwYBBQUHAgEW\n"
+      "HGh0dHBzOi8vd3d3LmRpZ2ljZXJ0LmNvbS9DUFMwDQYJKoZIhvcNAQELBQADggEB\n"
+      "AIIcBDqC6cWpyGUSXAjjAcYwsK4iiGF7KweG97i1RJz1kwZhRoo6orU1JtBYnjzB\n"
+      "c4+/sXmnHJk3mlPyL1xuIAt9sMeC7+vreRIF5wFBC0MCN5sbHwhNN1JzKbifNeP5\n"
+      "ozpZdQFmkCo+neBiKR6HqIA+LMTMCMMuv2khGGuPHmtDze4GmEGZtYLyF8EQpa5Y\n"
+      "jPuV6k2Cr/N3XxFpT3hRpt/3usU/Zb9wfKPtWpoznZ4/44c1p9rzFcZYrWkj3A+7\n"
+      "TNBJE0GmP2fhXhP1D/XVfIW/h0yCJGEiV9Glm/uGOa3DXHlmbAcxSyCRraG+ZBkA\n"
+      "7h4SeM6Y8l/7MBRpPCz6l8Y=\n"
+      "-----END CERTIFICATE-----\n";
+#endif 
+#endif /* ENABLE_HARD_CODE_CERTIFICATE */
+
 /*===================================== Private Variables ===========================*/
 
 static const char * gscpcFileName = "PAYSOUND.INO";
-/*===================================== Function Prototypes =========================*/
 
+
+/*===================================== Function Prototypes =========================*/
+bool initDisplay( void );
 
 /*===================================== Function Definitions ========================*/
 
@@ -289,6 +362,8 @@ BOOL WifiLinkProcess( void )
   Serial.print("Connecting to ");
   Serial.println(cgpcSSID);
   
+  //WiFi.setTxPower(WIFI_POWER_19dBm);  // Optional: Adjust Wi-Fi transmission power
+
   while (WiFi.status() != WL_CONNECTED) 
   {
     delay(1000);
@@ -348,7 +423,7 @@ String getEncryptionType(wifi_auth_mode_t authMode)
   }
 }
 
-#ifdef ENABLE_PING_MODULE
+#if 0 //def ENABLE_PING_MODULE
 // Function to check internet connection by connecting to a host and port
 bool pingTest(const char* host)
 {
@@ -429,6 +504,36 @@ void MQTT_HandleErrorCode( int errorCode )
     }
 }
 /*}}*/
+#ifdef ENABLE_SECURE_WIFI_CONNECT
+void SetClientCertificate()
+{
+#ifdef ENABLE_HARD_CODE_CERTIFICATE
+  gWifiespClient.setCACert(gcpcCACertificate);
+#else
+  if (!SPIFFS.begin(true)) 
+  {
+    Serial.println("Failed to mount file system");
+    return;
+  }
+
+  File certFile = SPIFFS.open("/AmazonRootCA.pem", "r");
+  if (!certFile) 
+  {
+    Serial.println("Failed to open certificate file");
+    return;
+  }
+
+  String cert = "";
+  while (certFile.available()) {
+    cert += (char)certFile.read();
+  }
+  certFile.close();
+
+  gWifiespClient.setCACert(cert.c_str());
+#endif  
+  
+}
+#endif /* ENABLE_SECURE_WIFI_CONNECT */
 #ifdef ENABLE_PUB_SUB_CLIENT
 /*
  * Args    : void *
@@ -446,15 +551,27 @@ boolean MQTT_Reconnect( void )
 
     if ( gMQTTClient.connect( gacUniqueID, cgpcMqttUser, cgpcMqttPassword ) )
     { 
-      char acMQttSubscribeTopic[ MAX_MQTT_TOPIC_SUBSCRIBE_LEN ];
-
+      char acMQttSubscribeTopic[ MAX_MQTT_TOPIC_SUBSCRIBE_LEN ] = { 0 };
+#if 0
       strcpy( acMQttSubscribeTopic, PSB_GetUniqueIDString( ) );
 
       strcat( acMQttSubscribeTopic, MQTT_SUBS_TOPIC_PAYMENTS_STATUS );
-
-      Serial.println("connected");
-
-      gMQTTClient.subscribe(acMQttSubscribeTopic); //subscribe to your topic
+#else
+      strcpy( acMQttSubscribeTopic, "SanthoshG/feeds/paymenttrigger" );
+#endif
+      Serial.println("connected:");
+      Serial.println(acMQttSubscribeTopic);
+      if (gMQTTClient.subscribe(acMQttSubscribeTopic))
+      {
+          Serial.print("Successfully subscribed to ");
+          Serial.println(acMQttSubscribeTopic);
+      }
+      else 
+      {
+          Serial.print("Failed to subscribe to ");
+          Serial.println(acMQttSubscribeTopic);
+          bRetMqttConnectStatus = false;
+      }
     } 
     else
     {
@@ -498,55 +615,59 @@ void MQTT_ResponseCallback( char* pcMqttSubcTopic, byte* pcPayload, unsigned int
 /*}}*/
 #endif /* ENABLE_PUB_SUB_CLIENT */
 
-
-void GenerateAndDisplayQR( String upiData ) 
+#ifdef ENABLE_QRCODE_MODULE
+// This function generates and displays a QR code
+void GenerateAndDisplayQR(String upiData)
 {
-  int size = MAX_QR_GENERATOR_SIZE;
-  QRCode qrcode;
-  
-  // Create QR code from the UPI string
-  qrcode.init();
-  qrcode.setData(upiData.c_str());
-  qrcode.generate();
+    // Set up the QR code configuration
+    esp_qrcode_config_t config = ESP_QRCODE_CONFIG_DEFAULT();  // Use default config
+    config.max_qrcode_version = 10;  // You can change this if needed
+    config.qrcode_ecc_level = ESP_QRCODE_ECC_MED;  // Set error correction level (medium)
 
-  // Display the QR code on the TFT screen
-  int offsetX = (gTftDisplayHndl.width() - size) / 2;  // Center the QR code
-  int offsetY = (gTftDisplayHndl.height() - size) / 2;
+    // Generate the QR code and pass the UPI data as the text to encode
+    esp_err_t err = esp_qrcode_generate(&config, upiData.c_str());
 
-  gTftDisplayHndl.fillRect(0, 0, gTftDisplayHndl.width(), gTftDisplayHndl.height(), TFT_WHITE);  // Clear the screen
-  
-  for ( int y = 0; y < size; y++ ) 
-  {
-    for ( int x = 0; x < size; x++ ) 
-    {
-      if (qrcode.getModule(x, y)) 
-      {
-        gTftDisplayHndl.fillRect(offsetX + x * 2, offsetY + y * 2, 2, 2, TFT_BLACK);  // Draw QR code module
-      }
+    if (err != ESP_OK) {
+        Serial.println("Error generating QR Code");
+        return;
     }
-  }
 
-  Serial.println("UPI QR Code generated and displayed.");
+    // Create the QR code handle
+    esp_qrcode_handle_t qrcode = (esp_qrcode_handle_t)upiData.c_str();  // Using the UPI data as the handle (assuming `esp_qrcode_generate` generates and stores QR code data)
+
+    // Get the size of the QR code
+    int size = esp_qrcode_get_size(qrcode);
+
+    // Set offsets for positioning the QR code on the screen
+    int offsetX = (gTftDisplayHndl.width() - size * 2) / 2;
+    int offsetY = (gTftDisplayHndl.height() - size * 2) / 2;
+
+    // Clear the screen before drawing the QR code
+    gTftDisplayHndl.fillRect(0, 0, gTftDisplayHndl.width(), gTftDisplayHndl.height(), TFT_WHITE);
+
+    // Loop through each module of the QR code
+    for (int y = 0; y < size; y++) {
+        for (int x = 0; x < size; x++) {
+            // Check if the current module is dark (black)
+            if (esp_qrcode_get_module(qrcode, x, y)) {
+                gTftDisplayHndl.fillRect(offsetX + x * 2, offsetY + y * 2, 2, 2, TFT_BLACK);  // Draw the black module
+            }
+        }
+    }
+
+    // Print a success message
+    Serial.println("UPI QR Code generated and displayed.");
 }
-
-/*
- * Args    : void *
- * Return  : void
- * Description :
- */
-/*{{ CreateUPIString() */
-String CreateUPIString( unsigned int ui32Amount )
+#endif /* ENABLE_QRCODE_MODULE */
+// This function generates a UPI string with the given amount
+String CreateUPIString(float f32Amount)
 {
-
-  float amount  = ui32Amount; 
-  
-  // Format the UPI string
-  String upiString = "upi://pay?pa=" + upiID + "&pn=Merchant&mc=123456&tid=1234567890&tr=1234567890&tn=Payment%20for%20goods&am=";
-  upiString += String( amount, 2 );  // Append the amount to the UPI string
-  upiString += "&cu=INR&url=https://www.merchantwebsite.com";  // Add currency and URL
-  return upiString;
+    String upiString = "upi://pay?pa=" + upiID + "&pn=Merchant&mc=123456&tid=1234567890&tr=1234567890&tn=Payment%20for%20goods&am=";
+    upiString += String(f32Amount, 2);  // Append the amount to the UPI string
+    upiString += "&cu=INR&url=https://www.merchantwebsite.com";  // Add currency and URL
+    return upiString;
 }
-/*}}*/
+
 
 /*
  * Args    : void *
@@ -594,10 +715,11 @@ void PSB_PaySoundBoxManagerThread ( void *pvParameters )
   
   initDisplay();
 
-  unsigned ui32TransAmount = 0;
+  float f32TransAmount = 0;
 
   while ( true )
-  {      
+  { 
+#if 1    
     //if (xQueueReceive(msgQueue, &msg, portMAX_DELAY))
     {
           ui32Event = GetUserValueFromKeypad( );
@@ -607,19 +729,21 @@ void PSB_PaySoundBoxManagerThread ( void *pvParameters )
             case PSB_PAY_UPI:
             {
 
-              ui32TransAmount = GetUserValueFromKeypad( );
-                          
-              PSB_DEBUG_PRINT(( "%s %u > $PSB-MN-SBMGR$AMT[%u]", __DRV_CONSOLE_LINE__
-                        , gscpcFileName
-                        , __LINE__
+              f32TransAmount = GetUserValueFromKeypad( );
 
-                        , ui32TransAmount
-                        ));
+              Serial.printf("%s %u > $PSB-MN-SBMGR$AMT[%f]\n"
+                    , __DRV_CONSOLE_LINE__
 
+                    , gscpcFileName
+                    , __LINE__
+                    , f32TransAmount
+                    );
               // Generate UPI QR Code
-              String upiQRData = CreateUPIString( ui32TransAmount );
-  
-              GenerateAndDisplayQR( upiQRData );           
+              String upiQRData = CreateUPIString( f32TransAmount );
+
+#ifdef ENABLE_QRCODE_MODULE
+              GenerateAndDisplayQR( upiQRData );
+#endif /* ENABLE_QRCODE_MODULE */                         
             }
               break; /* PSB_PAY_UPI */
       
@@ -641,10 +765,15 @@ void PSB_PaySoundBoxManagerThread ( void *pvParameters )
             }
               break; /* default */          
           }
-   
-    //Serial.println("Sound Box Main thead...");
-    //vTaskDelay(1000 / portTICK_PERIOD_MS);  // Delay for 1 second
+    }
+
+    vTaskDelay(4000 / portTICK_PERIOD_MS);  // Delay for 1 second
+#else   
+      Serial.println("Sound Box Main thead...");
+      vTaskDelay(10000 / portTICK_PERIOD_MS);  // Delay for 1 second
+#endif     
   }
+ 
 }
 /*}}*/
 #ifdef ENABLE_MATRIX_KEYPAD
@@ -746,21 +875,25 @@ void PSB_WifiResetIfTimeout( void )
  * Description :Function to initialize the display
  */
 /*{{ initDisplay() */
-void initDisplay()
+bool initDisplay( void )
 {
-    // Initialize TFT display
-    gTftDisplayHndl.init();
+  
+  Serial.println("Init display...");
 
-    /* older initlise method like ST7735 or ILI9341 when the library is using specific configuration files */
-    //gTftDisplayHndl.begin();
-    
-    gTftDisplayHndl.setRotation(1);  // Adjust screen orientation
-
-     /* Clear the screen */
-    gTftDisplayHndl.fillScreen(TFT_WHITE);
-
-   
-    //gTftDisplayHndl.setTextColor(TFT_WHITE); 
+  // Try initializing the display and handle potential errors
+    try {
+        gTftDisplayHndl.init();
+        gTftDisplayHndl.setRotation(1);
+        gTftDisplayHndl.fillScreen(TFT_WHITE);
+        gbDisplayConnecStatus = true;
+    }
+    catch (const std::exception& e) {
+        Serial.println("Error initializing display: ");
+        Serial.println(e.what());
+        gbDisplayConnecStatus = false;
+        //return;  // Return gracefully if an error occurs
+    }
+    return gbDisplayConnecStatus;
 }
 /*}}*/
 
@@ -769,7 +902,7 @@ void initDisplay()
  * Return  : void
  * Description :Function to initialize the display
  */
-/*{{ initDisplay() */
+/*{{ drawTextSync() */
 void drawTextSync(const String & strUsertext)
 {
     gTftDisplayHndl.fillScreen(TFT_BLACK);
@@ -790,12 +923,17 @@ void setup()
   PSB_WifiSetup( );
 #endif /* ENABLE_WIFI_MODULE */
 
-#if 0
+#ifdef ENABLE_SECURE_WIFI_CONNECT
+ // SetClientCertificate();
+ gWifiespClient.setInsecure();  // This disables certificate verification (useful for debugging)
+#endif /* ENABLE_SECURE_WIFI_CONNECT */
+
 #ifdef ENABLE_PUB_SUB_CLIENT
   gMQTTClient.setServer( cgpcMqttServer, cgpi16MqttPort );
   gMQTTClient.setCallback( MQTT_ResponseCallback );
 #endif
 
+#if 0
   // Create message queue
   msgQueue = xQueueCreate( QUEUE_SIZE, sizeof( Message ) );
 
@@ -810,7 +948,7 @@ void setup()
               , 1
               , &gtskKeyboardHndl
               );
-#endif
+
   /* Pay Sound Box Manager thread create */
   xTaskCreate(  PSB_PaySoundBoxManagerThread
               , PAY_SOUND_BOX_MANAGER_THREAD_NAME
@@ -818,7 +956,8 @@ void setup()
               , NULL
               , 1
               , &gtskMainProcessHndl );
-            
+#endif
+
 }
 /*}}}*/
 
@@ -848,7 +987,7 @@ void loop()
       Serial.print(F("[WIFI] connected, IP: "));
       Serial.println(WiFi.localIP());
     }
-
+#if 0
     if (pingTest("8.8.8.8"))
     {
       Serial.println("[INTERNET] Connection is active");
@@ -857,8 +996,17 @@ void loop()
     {
       Serial.println("[INTERNET] No internet connection");
     }
-     
-     delay(5000);  // Check every 10 seconds
+  #endif 
+      
+      if ( !gMQTTClient.connected() )
+      {
+          MQTT_Reconnect( );
+      }
+
+     delay(4000);  // Check every 5 seconds
+
+       // Ensure the MQTT client loop runs so we can process incoming messages and keep the connection alive
+        gMQTTClient.loop();
   }
 #endif /* ENABLE_WIFI_MODULE */
 }

@@ -68,21 +68,21 @@ typedef char CHAR;
 #define ENABLE_ERROR_PRINT
 
 #ifdef ENABLE_DEBUG_PRINT
-    #define PSB_DEBUG_PRINT         printf ( __XX__ )
+    #define PSB_DEBUG_PRINT( __XX__ )         printf ( __XX__ )
 #else
-     #define PSB_DEBUG_PRINT        /* NOP */
+     #define PSB_DEBUG_PRINT( __XX__ )        /* NOP */
 #endif /* ENABLE_DEBUG_PRINT */
 
 #ifdef ENABLE_INFO_PRINT
-    #define PSB_INFO_PRINT         printf ( __XX__ )
+    #define PSB_INFO_PRINT( __XX__ )         printf ( __XX__ )
 #else
-     #define PSB_INFO_PRINT        /* NOP */
+     #define PSB_INFO_PRINT( __XX__ )        /* NOP */
 #endif /* ENABLE_INFO_PRINT */
 
 #ifdef ENABLE_ERROR_PRINT
-    #define PSB_ERROR_PRINT         printf ( __XX__ )
+    #define PSB_ERROR_PRINT( __XX__ )         printf ( __XX__ )
 #else
-     #define PSB_ERROR_PRINT        /* NOP */
+     #define PSB_ERROR_PRINT( __XX__ )        /* NOP */
 #endif /* ENABLE_ERROR_PRINT */
 
 #define __DRV_CONSOLE_LINE__  "\n"
