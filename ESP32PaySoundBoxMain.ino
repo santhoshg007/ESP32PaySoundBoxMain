@@ -40,6 +40,8 @@
 #include <WebServer.h>
 #include <HTTPClient.h>
 
+//#include <esp_system.h>  // Make sure this is included
+
 #ifdef ENABLE_ARDINOUNO_JSON
 #include <ArduinoJson.h>
 #endif /* ENABLE_ARDINOUNO_JSON */
@@ -92,6 +94,17 @@
 #define PAY_SOUND_BOX_MANAGER_THREAD_NAME       "PSBMGR" 
 #define PAY_SOUND_BOX_MANAGER_STACK_SIZE        ( 6 * 1024 )  /* 1Kb */
 /*}}}*/
+
+/*{{{ Mqtt Worker thread configuration */
+#define MQTT_WORKER_THREAD_NAME       "MQTTWK" 
+#define MQTT_WORKER_STACK_SIZE        ( 8 * 1024 )  /* 1Kb */
+/*}}}*/
+
+/*{{{ Mqtt Worker thread configuration */
+#define LTE_WORKER_THREAD_NAME       "LTEWK" 
+#define LTE_WORKER_STACK_SIZE        ( 10 * 1024 )  /* 1Kb */
+/*}}}*/
+
 
 /*{{{ Pay Sound Box thread configuration */
 #define PSB_WORKER_THREAD_NAME       "WORKER" 
@@ -194,6 +207,7 @@ Keypad keypad = Keypad(makeKeymap(keys), pin_rows, pin_column, ROW_NUM, COLUMN_N
 TaskHandle_t gtskMainProcessHndl;
 TaskHandle_t gtskKeyboardHndl;
 TaskHandle_t gtskDisplayHndl;
+TaskHandle_t gtskMqttHndl;
 
 // Message Queue Setup for communication between threads
 QueueHandle_t msgQueue;
@@ -254,6 +268,30 @@ const char* gcpcCACertificate = \
 #endif 
 #endif /* ENABLE_HARD_CODE_CERTIFICATE */
 
+#ifdef RTOS_THREAD_TEST_ODD_EVEN
+// Semaphores for synchronizing odd and even tasks
+SemaphoreHandle_t xSemaphoreOdd;  
+SemaphoreHandle_t xSemaphoreEven;
+
+volatile int gui32Number = 0;  // Shared variable to increment (start with 0)
+
+#endif /* RTOS_THREAD_TEST_ODD_EVEN */
+
+#ifdef TINY_GSM_MODEM_EC200U
+// Create an instance of HardwareSerial
+HardwareSerial mySerial(1); // Use UART1, change as needed
+bool isNetworkConnected = false;
+// Define AT Commands
+const char* AT = "AT\r\n";
+const char* AT_CPIN = "AT+CPIN?\r\n";  // Check SIM PIN
+const char* AT_CREG = "AT+CREG?\r\n";  // Check network registration
+const char* AT_CGATT = "AT+CGATT=1\r\n";  // Attach to the GPRS network
+const char* AT_CGDCONT = "AT+CGDCONT=1,\"IP\",\"jionet\"\r\n";  // Set the APN (replace with your provider's APN)
+const char* AT_CIPSTART = "AT+CIPSTART=\"TCP\",\"yourserver.com\",\"80\"\r\n";  // Start TCP connection to a server (replace with a real server)
+const char* AT_CIPSEND = "AT+CIPSEND\r\n";  // Send data over the connection
+const char* AT_CIPCLOSE = "AT+CIPCLOSE\r\n";  // Close the TCP connection
+
+#endif /* TINY_GSM_MODEM_EC200U */
 /*===================================== Private Variables ===========================*/
 
 static const char * gscpcFileName = "PAYSOUND.INO";
@@ -596,7 +634,7 @@ boolean MQTT_Reconnect( void )
  * Return  : void
  * Description :
  */
-/*{{ PSB_ProcessThread00() */
+/*{{ MQTT_ResponseCallback() */
 void MQTT_ResponseCallback( char* pcMqttSubcTopic, byte* pcPayload, unsigned int ui32Length ) 
 {
   Serial.print("Message arrived [");
@@ -615,6 +653,104 @@ void MQTT_ResponseCallback( char* pcMqttSubcTopic, byte* pcPayload, unsigned int
 /*}}*/
 #endif /* ENABLE_PUB_SUB_CLIENT */
 
+#ifdef TINY_GSM_MODEM_EC200U
+// Function to check if the UART port is properly connected
+bool checkUartConnection() {
+  long start = millis();
+  while (millis() - start < 2000) {  // Wait for 2 seconds for a response
+    if (mySerial.available()) {
+      return true;  // UART is responsive
+    }
+  }
+  return false;  // UART is not responding within timeout period
+}
+
+// Function to connect to the Internet using EC200U
+bool connectToInternet() {
+  Serial.println("Attempting to connect to the internet...");
+
+  // First, check if UART is connected
+  if (!checkUartConnection()) {
+    Serial.println("Error: UART connection not established. Retrying...");
+    return false;  // UART not connected, can't proceed
+  }
+
+  // Send AT command to check if the EC200U is available
+  sendATCommand(AT);
+
+  // Check SIM card status (PIN required?)
+  sendATCommand(AT_CPIN);
+
+  // Check if the device is registered on the network
+  sendATCommand(AT_CREG);
+
+  // Attach to the GPRS network
+  sendATCommand(AT_CGATT);
+
+  // Set the APN (replace "your_apn_here" with the correct APN for your provider)
+  sendATCommand(AT_CGDCONT);
+
+  // Start a TCP connection (replace "yourserver.com" with an actual server)
+  //sendATCommand(AT_CIPSTART);
+
+  // If everything is fine, the network is connected
+  isNetworkConnected = true;
+  Serial.println("Network connected!");
+
+  return isNetworkConnected;
+}
+
+// Function to send AT commands and wait for a response
+void sendATCommand(const char* command) {
+  mySerial.println(command);
+  Serial.print("Sent: ");
+  Serial.println(command);
+
+  // Wait for response
+  long start = millis();
+  while (millis() - start < 5000) {  // Wait for 5 seconds
+    if (mySerial.available()) {
+      String response = mySerial.readString();
+      Serial.print("Response: ");
+      Serial.println(response);
+      // Optionally, check for specific success strings
+      if (response.indexOf("OK") != -1) {
+        return; // Command succeeded
+      }
+    }
+  }
+
+  Serial.println("No response or failed response.");
+}
+
+// Function to connect to the internet and monitor the connection
+void connectAndMonitorInternetTask(void *pvParameters) {
+  while (true) {
+    if (!isNetworkConnected) {
+      Serial.println("Attempting to connect to the internet...");
+      if (connectToInternet()) {
+        Serial.println("Successfully connected to the internet!");
+      } else {
+        Serial.println("Failed to connect to the internet. Retrying...");
+      }
+    } else {
+      // If connected, monitor the connection every 5 seconds
+      Serial.println("Network is connected, monitoring...");
+
+      // Check connection status (send a ping or similar if needed to confirm)
+      sendATCommand(AT_CREG);  // You can check if you're still registered on the network
+      sendATCommand("AT+CIPSTATUS\r\n");  // You can send a status check command
+
+      // If the connection fails, attempt to reconnect
+      if (!isNetworkConnected) {
+        Serial.println("Network disconnected, trying to reconnect...");
+      }
+    }
+
+    vTaskDelay(5000 / portTICK_PERIOD_MS);  // Wait for 5 seconds before checking again
+  }
+}
+#endif 
 #ifdef ENABLE_QRCODE_MODULE
 // This function generates and displays a QR code
 void GenerateAndDisplayQR(String upiData)
@@ -668,23 +804,64 @@ String CreateUPIString(float f32Amount)
     return upiString;
 }
 
-
+#ifdef RTOS_THREAD_TEST_ODD_EVEN
 /*
  * Args    : void *
  * Return  : void
  * Description :
  */
 /*{{ PSB_ProcessThread00() */
-void PSB_ProcessThread00(void *pvParameters)
+void PSB_ProcessThreadOdd(void *pvParameters)
 {
+  Serial.print("Odd Thread Init: ");
+
   for (;;)
   {
-    Serial.println("Task 1 is running...");
-    vTaskDelay(1000 / portTICK_PERIOD_MS);  // Delay for 1 second
+    if (xSemaphoreTake(xSemaphoreOdd, portMAX_DELAY) == pdTRUE) 
+    {
+        Serial.print("Odd: ");
+        Serial.println(gui32Number);
+
+        // Increment the shared variable
+        gui32Number++;
+
+        // Give the semaphore to the even task
+        xSemaphoreGive(xSemaphoreEven);
+
+        vTaskDelay(1000 / portTICK_PERIOD_MS);  // Delay for 1 second
+      }
   }
 }
 /*}}*/
 
+/*
+ * Args    : void *
+ * Return  : void
+ * Description :
+ */
+/*{{ PSB_ProcessThread01() */
+void PSB_ProcessThreadEven(void *pvParameters) 
+{
+  Serial.print("Even Thread Init: ");
+  for (;;)
+  {
+    if (xSemaphoreTake(xSemaphoreEven, portMAX_DELAY) == pdTRUE)
+    {
+      Serial.print("Even: ");
+      Serial.println(gui32Number);
+
+      // Increment the shared variable
+      gui32Number++;
+
+      // Give the semaphore to the odd task
+      xSemaphoreGive(xSemaphoreOdd);
+
+      vTaskDelay(1000 / portTICK_PERIOD_MS);  // Delay for 1 second
+    }
+  }
+}
+/*}}*/
+#endif /* RTOS_THREAD_TEST_ODD_EVEN */
 unsigned int GetUserValueFromKeypad( void )
 {
   unsigned int ui32RetUserValue = -1;
@@ -707,19 +884,18 @@ unsigned int GetUserValueFromKeypad( void )
  * Return  : void
  * Description :
  */
-/*{{ PSB_ProcessThread00() */
+/*{{ PSB_PaySoundBoxManagerThread() */
 void PSB_PaySoundBoxManagerThread ( void *pvParameters )
 {
   Message msg;
   int ui32Event = 0;
-  
-  initDisplay();
-
   float f32TransAmount = 0;
+
+ 
 
   while ( true )
   { 
-#if 1    
+#if 0
     //if (xQueueReceive(msgQueue, &msg, portMAX_DELAY))
     {
           ui32Event = GetUserValueFromKeypad( );
@@ -804,15 +980,25 @@ void PSB_KeyboardMonitorTask(void *pvParameters)
 /*
  * Args    : void *
  * Return  : void
- * Description :
+ * Description :MQTT Task..
  */
-/*{{ PSB_ProcessThread01() */
-void PSB_ProcessThread01(void *pvParameters)
-{
-  for (;;) 
+/*{{ MQTT_MonitorTask() */
+void MQTT_MonitorTask(void* parameter)
+ {
+#ifdef ENABLE_PUB_SUB_CLIENT
+  gMQTTClient.setServer( cgpcMqttServer, cgpi16MqttPort );
+  gMQTTClient.setCallback( MQTT_ResponseCallback );
+#endif
+
+  while ( true ) 
   {
-    Serial.println("Task 2 is running...");
-    vTaskDelay(500 / portTICK_PERIOD_MS);  // Delay for 0.5 second
+    if ( !gMQTTClient.connected() )
+    {
+        MQTT_Reconnect( );
+    }
+    // Ensure the MQTT client loop runs so we can process incoming messages and keep the connection alive
+    gMQTTClient.loop();    // Keep the MQTT connection alive 
+    delay(10); // Small delay to prevent watchdog timeout
   }
 }
 /*}}*/
@@ -916,30 +1102,39 @@ void setup()
   Serial.begin(115200);  // Start the Serial communication
   while (!Serial);       // Wait for serial monitor
 
-  GetWifiScanList();
+  mySerial.begin(115200, SERIAL_8N1, 16, 17); // Replace with the correct TX, RX pins
+
+  Serial.println("Starting EC200U LTE connection...");
+
+  delay(2000);  // Wait for EC200U to boot up
   
 #ifdef ENABLE_WIFI_MODULE
+  GetWifiScanList();
+
   /* Setup Wifi*/
   PSB_WifiSetup( );
 #endif /* ENABLE_WIFI_MODULE */
+
+  // Check if PSRAM is available
+  if (psramFound()) {
+    Serial.println("PSRAM is available.");
+  }
 
 #ifdef ENABLE_SECURE_WIFI_CONNECT
  // SetClientCertificate();
  gWifiespClient.setInsecure();  // This disables certificate verification (useful for debugging)
 #endif /* ENABLE_SECURE_WIFI_CONNECT */
 
-#ifdef ENABLE_PUB_SUB_CLIENT
+#if 0 //def ENABLE_PUB_SUB_CLIENT
   gMQTTClient.setServer( cgpcMqttServer, cgpi16MqttPort );
   gMQTTClient.setCallback( MQTT_ResponseCallback );
 #endif
 
+   //initDisplay();
+
 #if 0
   // Create message queue
   msgQueue = xQueueCreate( QUEUE_SIZE, sizeof( Message ) );
-
-  // Create FreeRTOS tasks
-  xTaskCreate(PSB_ProcessThread00, "Task1", 1000, NULL, 1, NULL);
-  xTaskCreate(PSB_ProcessThread01, "Task2", 1000, NULL, 1, NULL);
 
   xTaskCreate( PSB_KeyboardMonitorTask
               , KEYPAD_THREAD_NAME
@@ -949,6 +1144,27 @@ void setup()
               , &gtskKeyboardHndl
               );
 
+#if 0
+  // Create the MQTT task
+  xTaskCreatePinnedToCore( MQTT_MonitorTask // Function to run          
+              , MQTT_WORKER_THREAD_NAME             // Name of the task
+              , MQTT_WORKER_STACK_SIZE                    // Stack size (bytes)
+              , NULL                   // Parameters to pass to the task
+              , 1                      // Task priority (1 is low priority)
+              , &gtskMqttHndl        // Task handle (optional)
+              , 0                        // Core where the task runs (0 or 1)
+            );
+#endif
+#endif
+
+  /* Pay Sound Box Manager thread create */
+  xTaskCreate(  MQTT_MonitorTask
+              , MQTT_WORKER_THREAD_NAME
+              , MQTT_WORKER_STACK_SIZE
+              , NULL
+              , 1
+              , &gtskMqttHndl );
+
   /* Pay Sound Box Manager thread create */
   xTaskCreate(  PSB_PaySoundBoxManagerThread
               , PAY_SOUND_BOX_MANAGER_THREAD_NAME
@@ -956,7 +1172,33 @@ void setup()
               , NULL
               , 1
               , &gtskMainProcessHndl );
-#endif
+
+  // Start the connection/reconnection task
+  xTaskCreate( connectAndMonitorInternetTask
+              , LTE_WORKER_THREAD_NAME
+              , LTE_WORKER_STACK_SIZE
+              , NULL
+              , 1
+              , NULL );
+
+#ifdef RTOS_THREAD_TEST_ODD_EVEN
+  // Create the semaphores
+  xSemaphoreOdd = xSemaphoreCreateBinary();
+  xSemaphoreEven = xSemaphoreCreateBinary();
+
+  // Check if the semaphores were created successfully
+  if (xSemaphoreOdd == NULL || xSemaphoreEven == NULL) {
+    Serial.println("Error creating semaphores!");
+    while (1);  // Hang here if semaphore creation fails
+  }
+
+  // Initially, give control to the odd task first
+  xSemaphoreGive(xSemaphoreOdd);
+
+  // Create FreeRTOS tasks
+  xTaskCreate(PSB_ProcessThreadEven, "Task1", 2048, NULL, 1, NULL);
+  xTaskCreate(PSB_ProcessThreadOdd, "Task2", 2048, NULL, 1, NULL);
+#endif /* RTOS_THREAD_TEST_ODD_EVEN */
 
 }
 /*}}}*/
@@ -997,16 +1239,8 @@ void loop()
       Serial.println("[INTERNET] No internet connection");
     }
   #endif 
-      
-      if ( !gMQTTClient.connected() )
-      {
-          MQTT_Reconnect( );
-      }
-
-     delay(4000);  // Check every 5 seconds
-
-       // Ensure the MQTT client loop runs so we can process incoming messages and keep the connection alive
-        gMQTTClient.loop();
+    
+    delay(4000);  // Check every 4 seconds 
   }
 #endif /* ENABLE_WIFI_MODULE */
 }

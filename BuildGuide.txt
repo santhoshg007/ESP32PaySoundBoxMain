@@ -94,7 +94,45 @@ Login the payment gateways webhooks:
 CA Certificate :
 ------------------
 	https://www.amazontrust.com/repository/AmazonRootCA1.pem
+
+ADAFRUIT_AIO_USERNAME = "SanthoshG"
+ADAFRUIT_AIO_KEY      = "aio_vSBQ904F7wNRCL8jOl3KmE2rblwy"
+
+
+ESP-IDF Install :
+------------------
+1. Source code download :
+	git clone --recursive https://github.com/espressif/esp-idf.git
+2. Set Up ESP-ID :
+	cd esp-idf
+3. Run the ESP-IDF setup script :
+	install.bat
+4. python -m pip install pyyaml
+	Show : PS D:\Project\IOT\ESP32\SoundBoxPay\esp-idf> python -m pip show pyyaml
+4. Set the Environment Variables:
+	export IDF_PATH=C:/path/to/esp-idf
+5. Install Toolchain: 
+	install.bat
+6. Check the Installation:
+	idf.py --version
 	
+	
+Create and Build Your First Project: 
+0. .\export.bat
+1. cd examples/get-started/hello_world
+2. idf.py set-target esp32s3
+3. idf.py fullclean
+4. idf.py build
+5. idf.py -p COM3 flash
+6. idf.py -p COM3 monitor
+
+
+2. idf.py menuconfig
+3. idf.py -p COMx flash
+$Env:IDF_PATH = "D:\Project\IOT\ESP32\SoundBoxPay\esp-idf"
+
+ $Env:IDF_PATH="D:\Project\IOT\ESP32\SoundBoxPay\esp-idf"
+
 ------------------------------------
 TFT Display connectin Procedure :
 ------------------------------------
@@ -127,6 +165,18 @@ Copy
 #define TFT_MISO   19
 #define TFT_MOSI   23
 #define TFT_LED    3.3V
+
+LTE Connect :
+-------------
+Here’s how you should wire the EC200U to the ESP32-S3:
+
+
+EC200U TX → ESP32 GPIO16 (RX)
+EC200U RX → ESP32 GPIO17 (TX)
+
+EC200U GND → ESP32-S3 GND
+
+EC200U VCC → ESP32-S3 5V (Ensure that your EC200U is rated for 5V input, as some modules might require 3.3V)
 
 Payment method :
 ----------------
@@ -766,3 +816,213 @@ void loop() {
 
 ### Conclusion:
 This approach of creating an MQTT task using FreeRTOS allows you to run MQTT communication asynchronously and keep the main program free for other operations. By using FreeRTOS tasks, you can efficiently handle multiple concurrent tasks on your ESP32.
+
+
+The core difference between `xTaskCreate()` and `xTaskCreatePinnedToCore()` lies in how they handle task placement on multi-core systems like the ESP32.
+
+Here's a clear breakdown:
+
+**`xTaskCreate()`:**
+
+* **Core Assignment:**
+    * This function does *not* explicitly specify which CPU core the task will run on.
+    * The FreeRTOS scheduler will decide which core to run the task on, based on its internal scheduling algorithms.
+    * The task might migrate between cores during its execution.
+* **Simplicity:**
+    * It's simpler to use, as you don't need to worry about core assignments.
+    * It's suitable for most general-purpose tasks where core affinity is not critical.
+* **Portability:**
+    * This function is more portable across different FreeRTOS implementations, even those running on single-core processors.
+* **Usage:**
+    * Use this when you don't care which core a task runs on, or when you are running on a single core processor.
+
+**`xTaskCreatePinnedToCore()`:**
+
+* **Core Assignment:**
+    * This function *explicitly* pins the task to a specific CPU core.
+    * The task will run exclusively on the core specified by the `xCoreID` parameter.
+    * This prevents task migration between cores.
+* **Control:**
+    * It provides finer control over task placement, allowing you to optimize performance and meet real-time requirements.
+* **ESP32 Specific:**
+    * This function is specific to multi-core FreeRTOS implementations, such as the one used on the ESP32.
+* **Usage:**
+    * Use this when you need to control which core a task runs on, such as for performance optimization, real-time requirements, or peripheral control.
+
+**In essence:**
+
+* `xTaskCreate()`: "Let the scheduler decide where to run the task."
+* `xTaskCreatePinnedToCore()`: "Run this task on *this specific* core."
+
+**When to Choose Which:**
+
+* Use `xTaskCreate()` for most general-purpose tasks.
+* Use `xTaskCreatePinnedToCore()` when:
+    * You have performance-critical tasks that need to run on a specific core.
+    * You have real-time tasks that need to avoid interruptions from other cores.
+    * You are trying to achieve core affinity, where a specific core is dedicated to a type of task.
+* It is generally recommended to use xTaskCreatePinnedToCore on the ESP32, as it allows for better control of the system.
+
+Here are the **APN settings** for mobile carriers in **India** and **Singapore**. These settings are required for your **EC200U LTE module** to establish an internet connection via your mobile network provider.
+
+### APN Configuration for **India**:
+
+1. **Airtel (India)**:
+   - **APN**: `airtelgprs.com`
+   - **Username**: `not set`
+   - **Password**: `not set`
+   - **MCC**: `404`
+   - **MNC**: `10`
+
+2. **Jio (India)**:
+   - **APN**: `jionet`
+   - **Username**: `not set`
+   - **Password**: `not set`
+   - **MCC**: `405`
+   - **MNC**: `857`
+
+3. **Vodafone Idea (India)**:
+   - **APN**: `www`
+   - **Username**: `not set`
+   - **Password**: `not set`
+   - **MCC**: `404`
+   - **MNC**: `20` (or `45` depending on the region)
+
+4. **BSNL (India)**:
+   - **APN**: `bsnlnet`
+   - **Username**: `not set`
+   - **Password**: `not set`
+   - **MCC**: `404`
+   - **MNC**: `11`
+
+### APN Configuration for **Singapore**:
+
+1. **Singtel (Singapore)**:
+   - **APN**: `internet`
+   - **Username**: `not set`
+   - **Password**: `not set`
+   - **MCC**: `525`
+   - **MNC**: `01`
+
+2. **StarHub (Singapore)**:
+   - **APN**: `shwap`
+   - **Username**: `not set`
+   - **Password**: `not set`
+   - **MCC**: `525`
+   - **MNC**: `02`
+
+3. **M1 (Singapore)**:
+   - **APN**: `internet`
+   - **Username**: `not set`
+   - **Password**: `not set`
+   - **MCC**: `525`
+   - **MNC**: `03`
+
+---
+
+### How to Set the APN:
+
+1. **For India**: Depending on which Indian carrier you're using, replace `"your_apn_here"` in the AT command with the correct APN for that carrier. Here’s an example for **Jio**:
+
+   ```cpp
+   const char* AT_CGDCONT = "AT+CGDCONT=1,\"IP\",\"jionet\"\r\n";
+   ```
+
+   Similarly, replace it for Airtel, Vodafone, or BSNL by using the respective APN strings.
+
+2. **For Singapore**: If you're using **Singtel**, replace `"your_apn_here"` with `internet`:
+
+   ```cpp
+   const char* AT_CGDCONT = "AT+CGDCONT=1,\"IP\",\"internet\"\r\n";
+   ```
+
+   For **StarHub**, it would be:
+
+   ```cpp
+   const char* AT_CGDCONT = "AT+CGDCONT=1,\"IP\",\"shwap\"\r\n";
+   ```
+
+   For **M1**, it would be:
+
+   ```cpp
+   const char* AT_CGDCONT = "AT+CGDCONT=1,\"IP\",\"internet\"\r\n";
+   ```
+
+### Final Example (for Jio in India):
+
+```cpp
+const char* AT_CGDCONT = "AT+CGDCONT=1,\"IP\",\"jionet\"\r\n";
+```
+
+### How to Find APN Settings:
+
+1. **Check your Mobile Carrier’s Website**: Most mobile carriers list their APN settings on their official website, or you can contact their customer support for the correct settings.
+2. **SIM Card Configuration**: In some cases, the mobile carrier may automatically configure the APN on your device when you insert the SIM card.
+
+Once you configure the correct APN, your EC200U module should be able to connect to the internet using the mobile network in India or Singapore.
+=====================================
+Pay Pal Response for event :
+=====================================
+1. Response :
+-------------
+	{
+  "id": "WHPOC2017-9WY437509V4499423",
+  "create_time": "2017-02-14T18:28:16Z",
+  "resource_type": "order",
+  "event_type": "PAYMENT.ORDER.CREATED",
+  "summary": "A Payment order is created",
+  "resource": {
+    "parent_payment": "PAY-8U555528BH195130VLCRUVPA",
+    "update_time": "2017-02-14T18:28:37Z",
+    "amount": {
+      "total": "4.54",
+      "currency": "USD"
+    },
+    "is_final_capture": true,
+    "create_time": "2017-02-14T18:28:16Z",
+    "transaction_fee": {
+      "value": "0.43",
+      "currency": "USD"
+    },
+    "links": [
+      {
+        "href": "https://www.api.paypal.com/v1/payments/capture/9WY437509V4499423",
+        "rel": "self",
+        "method": "GET"
+      },
+      {
+        "href": "https://www.api.paypal.com/v1/payments/capture/9WY437509V4499423/refund",
+        "rel": "refund",
+        "method": "POST"
+      },
+      {
+        "href": "https://www.api.paypal.com/v1/payments/orders/O-7K226695UU6131610",
+        "rel": "order",
+        "method": "GET"
+      },
+      {
+        "href": "https://www.api.paypal.com/v1/payments/payment/PAY-8U555528BH195130VLCRUVPA",
+        "rel": "parent_payment",
+        "method": "GET"
+      }
+    ],
+    "id": "O-7K226695UU6131610",
+    "state": "completed",
+    "reasonCode": "None"
+  },
+  "links": [
+    {
+      "href": "https://api.paypal.com/v1/notifications/webhooks-events/WHPOC2017-9WY437509V4499423",
+      "rel": "self",
+      "method": "GET",
+      "encType": "application/json"
+    },
+    {
+      "href": "https://api.paypal.com/v1/notifications/webhooks-events/WHPOC2017-9WY437509V4499423/resend",
+      "rel": "resend",
+      "method": "POST",
+      "encType": "application/json"
+    }
+  ],
+  "event_version": "1.0"
+}

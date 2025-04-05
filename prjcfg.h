@@ -86,6 +86,8 @@ extern "C" {
 // Define modem interface
 #define TINY_GSM_MODEM_EC200U 
 
+//#define RTOS_THREAD_TEST_ODD_EVEN   1
+
 /*===================================== GPIO Pin Macro ===========================================() */
 
 #define TFT_CS     5
