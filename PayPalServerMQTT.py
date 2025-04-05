@@ -9,7 +9,7 @@ app = Flask(__name__)
 broker = "io.adafruit.com"
 port = 1883
 username = "SanthoshG"  # Replace with your Adafruit IO username
-aio_key = "aio_vSBQ904F7wNRCL8jOl3KmE2rblwy"
+aio_key = ""
 feed = "paymentTrigger"  # Replace with the feed you're interested in
 
 # Initialize MQTT client for publishing to Adafruit IO

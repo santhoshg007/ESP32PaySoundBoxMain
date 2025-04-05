@@ -95,8 +95,6 @@ CA Certificate :
 ------------------
 	https://www.amazontrust.com/repository/AmazonRootCA1.pem
 
-ADAFRUIT_AIO_USERNAME = "SanthoshG"
-ADAFRUIT_AIO_KEY      = "aio_vSBQ904F7wNRCL8jOl3KmE2rblwy"
 
 
 ESP-IDF Install :
