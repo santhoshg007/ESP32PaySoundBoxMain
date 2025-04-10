@@ -181,6 +181,13 @@ WiFiClientSecure gWifiespClient;  // Secure Wi-Fi client
 WiFiClient gWifiespClient;
 #endif /* ENABLE_SECURE_WIFI_CONNECT */
 
+String clientId = "ESP32Client";
+String mqttTopicSubscribe = "my/topic/in";
+String mqttTopicPublish = "my/topic/out";
+String mqttMessage = "Hello MQTT from EC200U!";
+// Configuration
+String mqttBroker = "broker.hivemq.com";
+int mqttPort = 1883;
 
 #ifdef ENABLE_PUB_SUB_CLIENT
 PubSubClient gMQTTClient(gWifiespClient);
@@ -278,18 +285,39 @@ volatile int gui32Number = 0;  // Shared variable to increment (start with 0)
 #endif /* RTOS_THREAD_TEST_ODD_EVEN */
 
 #ifdef TINY_GSM_MODEM_EC200U
-// Create an instance of HardwareSerial
-HardwareSerial mySerial(1); // Use UART1, change as needed
-bool isNetworkConnected = false;
+//bool isNetworkConnected = false;
 // Define AT Commands
 const char* AT = "AT\r\n";
 const char* AT_CPIN = "AT+CPIN?\r\n";  // Check SIM PIN
-const char* AT_CREG = "AT+CREG?\r\n";  // Check network registration
-const char* AT_CGATT = "AT+CGATT=1\r\n";  // Attach to the GPRS network
+//const char* AT_CREG = "AT+CREG?\r\n";  // Check network registration
+//const char* AT_CGATT = "AT+CGATT=1\r\n";  // Attach to the GPRS network
 const char* AT_CGDCONT = "AT+CGDCONT=1,\"IP\",\"jionet\"\r\n";  // Set the APN (replace with your provider's APN)
 const char* AT_CIPSTART = "AT+CIPSTART=\"TCP\",\"yourserver.com\",\"80\"\r\n";  // Start TCP connection to a server (replace with a real server)
 const char* AT_CIPSEND = "AT+CIPSEND\r\n";  // Send data over the connection
 const char* AT_CIPCLOSE = "AT+CIPCLOSE\r\n";  // Close the TCP connection
+
+HardwareSerial& lteSerial = Serial1; // Or try Serial2 if Serial1 doesn't work
+
+// Define the ESP32 pins connected to the EC200U (adjust based on your wiring)
+const int lteRxPin = 16; // ESP32 RX connected to EC200U TX
+const int lteTxPin = 17; // ESP32 TX connected to EC200U RX
+const int powerKeyPin = 4; // Example: If the EC200U needs a power key pulse
+
+// --- Network Configuration ---
+const String APN = "jionet";
+const String PING_TARGET = "8.8.8.8";
+const String AT_CREG = "AT+CEREG?"; // LTE network registration command
+
+// --- SMS Configuration ---
+const String recipientNumber = "+919361674809"; // Replace with actual number
+const String smsMessage = "Hello from ESP32 and EC200U!";
+
+// --- Global Flags ---
+volatile bool isLteModulePowered = false;
+volatile bool isSimReady = false;
+volatile bool isNetworkRegistered = false;
+volatile bool isPDPContextActive = false;
+volatile bool isNetworkConnected = false;
 
 #endif /* TINY_GSM_MODEM_EC200U */
 /*===================================== Private Variables ===========================*/
@@ -299,6 +327,19 @@ static const char * gscpcFileName = "PAYSOUND.INO";
 
 /*===================================== Function Prototypes =========================*/
 bool initDisplay( void );
+
+bool sendATCommand(String command, String expectedResponse, unsigned long timeout);
+void powerOnLteModule();
+bool checkSimStatus();
+bool checkNetworkRegistration();
+bool setupPDPContext();
+bool activatePDPContext();
+bool pingNetwork(String target);
+void sendSMS(String phoneNumber, String message);
+bool connectToInternet();
+void connectAndMonitorInternetTask(void *pvParameters);
+void lteSetup();
+
 
 /*===================================== Function Definitions ========================*/
 
@@ -345,6 +386,14 @@ bool initDisplay( void );
  * Author and credits: Sachin Soni
  * YouTube: Check out tech tutorials and projects at **techiesms**: https://www.youtube.com/techiesms
  */
+
+// Assuming you have connected the EC200U-CN TX pin to ESP32 RX pin (e.g., GPIO16)
+// and the EC200U-CN RX pin to ESP32 TX pin (e.g., GPIO17)
+// and the GND pins of both modules are connected.
+
+// Choose the ESP32 hardware serial port you want to use.
+// Common options are Serial (usually connected to USB), Serial1, or Serial2.
+// You might need to adjust the pin numbers depending on your ESP32 board.
 
  /*
  * Args    : long ling int64 => unique ID MAC address or other.
@@ -658,97 +707,11 @@ void MQTT_ResponseCallback( char* pcMqttSubcTopic, byte* pcPayload, unsigned int
 bool checkUartConnection() {
   long start = millis();
   while (millis() - start < 2000) {  // Wait for 2 seconds for a response
-    if (mySerial.available()) {
+    if (lteSerial.available()) {
       return true;  // UART is responsive
     }
   }
   return false;  // UART is not responding within timeout period
-}
-
-// Function to connect to the Internet using EC200U
-bool connectToInternet() {
-  Serial.println("Attempting to connect to the internet...");
-
-  // First, check if UART is connected
-  if (!checkUartConnection()) {
-    Serial.println("Error: UART connection not established. Retrying...");
-    return false;  // UART not connected, can't proceed
-  }
-
-  // Send AT command to check if the EC200U is available
-  sendATCommand(AT);
-
-  // Check SIM card status (PIN required?)
-  sendATCommand(AT_CPIN);
-
-  // Check if the device is registered on the network
-  sendATCommand(AT_CREG);
-
-  // Attach to the GPRS network
-  sendATCommand(AT_CGATT);
-
-  // Set the APN (replace "your_apn_here" with the correct APN for your provider)
-  sendATCommand(AT_CGDCONT);
-
-  // Start a TCP connection (replace "yourserver.com" with an actual server)
-  //sendATCommand(AT_CIPSTART);
-
-  // If everything is fine, the network is connected
-  isNetworkConnected = true;
-  Serial.println("Network connected!");
-
-  return isNetworkConnected;
-}
-
-// Function to send AT commands and wait for a response
-void sendATCommand(const char* command) {
-  mySerial.println(command);
-  Serial.print("Sent: ");
-  Serial.println(command);
-
-  // Wait for response
-  long start = millis();
-  while (millis() - start < 5000) {  // Wait for 5 seconds
-    if (mySerial.available()) {
-      String response = mySerial.readString();
-      Serial.print("Response: ");
-      Serial.println(response);
-      // Optionally, check for specific success strings
-      if (response.indexOf("OK") != -1) {
-        return; // Command succeeded
-      }
-    }
-  }
-
-  Serial.println("No response or failed response.");
-}
-
-// Function to connect to the internet and monitor the connection
-void connectAndMonitorInternetTask(void *pvParameters) {
-  while (true) {
-    if (!isNetworkConnected) {
-      Serial.println("Attempting to connect to the internet...");
-      if (connectToInternet()) {
-        Serial.println("Successfully connected to the internet!");
-      } else {
-        Serial.println("Failed to connect to the internet. Retrying...");
-      }
-    } else {
-      // If connected, monitor the connection every 5 seconds
-      Serial.println("Network is connected, monitoring...");
-
-      // Check connection status (send a ping or similar if needed to confirm)
-      sendATCommand(AT_CREG);  // You can check if you're still registered on the network
-      sendATCommand("AT+CIPSTATUS\r\n");  // You can send a status check command
-
-      // If the connection fails, attempt to reconnect
-      if (!isNetworkConnected) {
-        Serial.println("Network disconnected, trying to reconnect...");
-      }
-    }
-
-    vTaskDelay(5000 / portTICK_PERIOD_MS);  // Wait for 5 seconds before checking again
-  }
 }
 #endif 
 #ifdef ENABLE_QRCODE_MODULE
@@ -977,6 +940,39 @@ void PSB_KeyboardMonitorTask(void *pvParameters)
 /*}}*/
 #endif /* ENABLE_MATRIX_KEYPAD */
 
+void setupMQTT4G() {
+  Serial.println("Setting up MQTT...");
+
+  // Configure client ID
+  sendATCommand("AT+QMTCFG=\"client\",\"" + clientId + "\"", "OK", 5000);
+
+  // Open MQTT connection (assuming connection ID 0)
+  sendATCommand("AT+QMTOPEN=0,\"" + mqttBroker + "\"," + String(mqttPort), "+QMTOPEN: 0,0", 10000);
+
+  // Connect to MQTT broker
+  sendATCommand("AT+QMTCONN=0,\"" + clientId + "\"", "OK", 10000); // No auth in this example
+
+  // Subscribe to a topic
+  sendATCommand("AT+QMTSUB=0,1,\"" + mqttTopicSubscribe + "\",0", "+QMTSUB: 0,1,0", 10000);
+
+  Serial.println("MQTT setup complete.");
+}
+
+void publishMQTT(String topic, String message) {
+  Serial.print("Publishing to topic: ");
+  Serial.println(topic);
+  Serial.print("Message: ");
+  Serial.println(message);
+  String publishCommand = "AT+QMTPUB=0,0,0,0,\"" + topic + "\"," + String(message.length());
+  if (sendATCommand(publishCommand, ">", 5000)) {
+    lteSerial.print(message);
+    lteSerial.write(26); // Ctrl+Z to send
+    sendATCommand("", "+QMTPUB: 0,1,0", 10000); // Wait for publish confirmation
+  } else {
+    Serial.println("Error publishing MQTT message.");
+  }
+}
+
 /*
  * Args    : void *
  * Return  : void
@@ -1096,19 +1092,180 @@ void drawTextSync(const String & strUsertext)
 }
 /*}}*/
 
+// --- LTE Module Initialization API ---
+void lteSetup() {
+  Serial.println("Initializing LTE Module...");
+  lteSerial.begin(115200, SERIAL_8N1, lteRxPin, lteTxPin);
+  Serial.print("LTE Serial Initialized on RX:");
+  Serial.print(lteRxPin);
+  Serial.print(", TX:");
+  Serial.println(lteTxPin);
+
+  powerOnLteModule();
+  isSimReady = checkSimStatus();
+  if (isSimReady) {
+    isNetworkRegistered = checkNetworkRegistration();
+    if (isNetworkRegistered) {
+      if (setupPDPContext()) {
+        isPDPContextActive = activatePDPContext();
+        if (isPDPContextActive) {
+          isNetworkConnected = true; // Initial connection assumed successful
+          Serial.println("LTE Module Initialized Successfully.");
+        } else {
+          Serial.println("Failed to activate PDP Context.");
+        }
+      } else {
+        Serial.println("Failed to setup PDP Context.");
+      }
+      sendSMS(recipientNumber, smsMessage); // Attempt to send SMS on setup
+    } else {
+      Serial.println("Failed to register on the network.");
+    }
+  } else {
+    Serial.println("SIM card not ready.");
+  }
+}
+
+// --- Helper Functions ---
+
+bool sendATCommand(String command, String expectedResponse, unsigned long timeout) {
+  Serial.print("Sending AT: ");
+  Serial.println(command);
+  lteSerial.println(command);
+  String response = "";
+  unsigned long startTime = millis();
+  const unsigned long yieldInterval = 100; // Yield every 100ms
+
+  while (millis() - startTime < timeout) {
+    while (lteSerial.available()) {
+      char c = lteSerial.read();
+      response += c;
+    }
+    if (response.indexOf(expectedResponse) != -1) {
+      Serial.print("Response: ");
+      Serial.println(response);
+      return true;
+    }
+    vTaskDelay(pdMS_TO_TICKS(yieldInterval)); // Allow other tasks to run
+  }
+
+  Serial.print("Timeout - No response or expected response not found: ");
+  Serial.println(response);
+  return false;
+}
+
+void powerOnLteModule() {
+  Serial.println("Powering on LTE Module...");
+  pinMode(powerKeyPin, OUTPUT);
+  digitalWrite(powerKeyPin, LOW);
+  delay(100);
+  digitalWrite(powerKeyPin, HIGH);
+  delay(1000);
+  delay(5000); // Wait for boot
+  isLteModulePowered = true;
+  Serial.println("LTE Module Power ON sequence complete.");
+}
+
+bool checkSimStatus() {
+  Serial.println("Checking SIM status...");
+  return sendATCommand("AT+CPIN?", "+CPIN: READY", 5000);
+}
+
+bool checkNetworkRegistration() {
+  Serial.println("Checking network registration...");
+  return sendATCommand(AT_CREG, "+CEREG: 0,1", 10000) || sendATCommand(AT_CREG, "+CEREG: 0,5", 10000);
+}
+
+bool setupPDPContext() {
+  Serial.println("Setting up PDP Context...");
+  return sendATCommand("AT+CGDCONT=1,\"IPV4V6\",\"" + APN + "\"", "OK", 5000);
+}
+
+bool activatePDPContext() {
+  Serial.println("Activating PDP Context...");
+  return sendATCommand("AT+CGACT=1,1", "OK", 10000);
+}
+
+bool pingNetwork(String target) {
+  Serial.print("Pinging ");
+  Serial.println(target);
+  return sendATCommand("AT+QPING=\"" + target + "\"", "+QPING:", 15000);
+}
+
+void sendSMS(String phoneNumber, String message) {
+  Serial.print("Sending SMS to: ");
+  Serial.println(phoneNumber);
+  Serial.print("Message: ");
+  Serial.println(message);
+
+  sendATCommand("AT+CMGF=1", "OK", 1000);
+  lteSerial.print("AT+CMGS=\"" + phoneNumber + "\"\r");
+  delay(100);
+  if (lteSerial.find(">")) {
+    Serial.print("> ");
+    lteSerial.print(message);
+    lteSerial.write(26); // Ctrl+Z
+    // Wait for SMS sending status report
+    unsigned long startTime = millis();
+    while (millis() - startTime < 10000) {
+      if (lteSerial.available()) {
+        String response = lteSerial.readStringUntil('\n');
+        Serial.println(response);
+        if (response.indexOf("+CMGS:") != -1 || response.indexOf("+CMS ERROR:") != -1) {
+          break;
+        }
+      }
+    }
+  } else {
+    Serial.println("Error sending SMS: > prompt not received.");
+  }
+}
+
+// --- Internet Connection Management Task ---
+void connectAndMonitorInternetTask(void *pvParameters) {
+  while (true) {
+
+    if (!isNetworkConnected) {
+      Serial.println("Attempting to connect to the internet...");
+      if (isLteModulePowered && isSimReady && isNetworkRegistered) {
+        if (setupPDPContext()) {
+          if (activatePDPContext()) {
+            isNetworkConnected = true;
+            Serial.println("Successfully connected to the internet!");
+          } else {
+            Serial.println("Failed to activate PDP Context.");
+          }
+        } else {
+          Serial.println("Failed to setup PDP Context.");
+        }
+      } else {
+        Serial.println("LTE module not fully initialized, cannot connect to internet yet.");
+      }
+    } else {
+      Serial.print("Network Pinging ");
+      Serial.println(PING_TARGET);
+      if (!pingNetwork(PING_TARGET)) {
+        Serial.println("Ping failed, assuming network disconnected.");
+        isNetworkConnected = false;
+      }
+    }
+    vTaskDelay(pdMS_TO_TICKS(5000)); // Wait for 5 seconds
+  }
+}
+
 /*{{{ setup()*/
 void setup() 
 {
   Serial.begin(115200);  // Start the Serial communication
   while (!Serial);       // Wait for serial monitor
 
-  mySerial.begin(115200, SERIAL_8N1, 16, 17); // Replace with the correct TX, RX pins
-
   Serial.println("Starting EC200U LTE connection...");
+
+  lteSetup();
 
   delay(2000);  // Wait for EC200U to boot up
   
-#ifdef ENABLE_WIFI_MODULE
+#if 0 //def ENABLE_WIFI_MODULE
   GetWifiScanList();
 
   /* Setup Wifi*/
@@ -1120,7 +1277,7 @@ void setup()
     Serial.println("PSRAM is available.");
   }
 
-#ifdef ENABLE_SECURE_WIFI_CONNECT
+#if 0 //def ENABLE_SECURE_WIFI_CONNECT
  // SetClientCertificate();
  gWifiespClient.setInsecure();  // This disables certificate verification (useful for debugging)
 #endif /* ENABLE_SECURE_WIFI_CONNECT */
@@ -1157,6 +1314,7 @@ void setup()
 #endif
 #endif
 
+#if 0
   /* Pay Sound Box Manager thread create */
   xTaskCreate(  MQTT_MonitorTask
               , MQTT_WORKER_THREAD_NAME
@@ -1172,7 +1330,7 @@ void setup()
               , NULL
               , 1
               , &gtskMainProcessHndl );
-
+#endif
   // Start the connection/reconnection task
   xTaskCreate( connectAndMonitorInternetTask
               , LTE_WORKER_THREAD_NAME
@@ -1206,7 +1364,7 @@ void setup()
 void loop()
 {
  
-#ifdef ENABLE_WIFI_MODULE
+#if 0 //def ENABLE_WIFI_MODULE
   if( WiFi.status() != WL_CONNECTED )
   {
     if(gbIsWifiConnected)

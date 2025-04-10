@@ -164,6 +164,25 @@ Copy
 #define TFT_MOSI   23
 #define TFT_LED    3.3V
 
+============================
+Tft Display configuration :
+============================
+	Display Color: RGB 65K color
+	Screen Size : 3.2(inch)
+	Type: TFT
+	Driver IC: ILI9341
+	Touch: No
+	Resolution: 320*240 (Pixel)
+	Module Interface: 4-wire SPI interface
+	Active Area (AA area): 48.6×64.8(mm)
+	Module PCB Size: 55.04×89.3(mm)
+	Operating Temperature: -20℃~60℃
+	Storage Temperature: -30℃~70℃
+	VCC power voltage: 3.3V~5V
+	Logic IO port voltage: 3.3V(TTL)
+	Weight: 41(g)
+
+
 LTE Connect :
 -------------
 Here’s how you should wire the EC200U to the ESP32-S3:
@@ -175,6 +194,23 @@ EC200U RX → ESP32 GPIO17 (TX)
 EC200U GND → ESP32-S3 GND
 
 EC200U VCC → ESP32-S3 5V (Ensure that your EC200U is rated for 5V input, as some modules might require 3.3V)
+
+
+AT Command Set: The most significant factor is whether the new 4G module uses the same AT command set as the EC200U-CN for core functionalities like:
+SIM card status (AT+CPIN?)
+Network registration (AT+CEREG?)
+Signal quality (AT+CSQ)
+PDP context configuration (AT+CGDCONT)
+PDP context activation (AT+CGACT)
+Pinging (AT+QPING - this is Quectel specific, others might use AT+PING)
+SMS sending (AT+CMGF, AT+CMGS)
+MQTT commands (if your new module supports them, the commands are likely different).
+
+
+Use a Suitable Power Supply: Once you know the required voltage, use a separate, regulated power supply that falls within that range. Common options include:
+3.7V Li-ion battery: Often a good choice for cellular modules.
+5V regulated power supply: Many USB power adapters can work, but ensure they can provide sufficient current (at least 2A is generally recommended).
+Adjustable DC-DC buck converter: If you have a higher voltage source, you can use a buck converter to step it down to the required voltage.
 
 Payment method :
 ----------------
