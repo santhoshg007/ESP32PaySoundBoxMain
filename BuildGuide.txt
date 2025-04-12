@@ -1060,3 +1060,151 @@ Pay Pal Response for event :
   ],
   "event_version": "1.0"
 }
+=============
+class EC200U {
+public:
+  EC200U(HardwareSerial& serial) : lteSerial(serial) {}
+
+  bool checkSimReady() {
+    return sendATCommand("AT+CPIN?", "+CPIN: READY", 5000);
+  }
+
+  bool registerNetwork() {
+    return sendATCommand("AT+CEREG?", "+CEREG: 0,1", 10000) || sendATCommand("AT+CEREG?", "+CEREG: 0,5", 10000);
+  }
+
+  bool setupPDP(const String& apn) {
+    return sendATCommand("AT+CGDCONT=1,\"IP\",\"" + apn + "\"", "OK", 5000);
+  }
+
+  bool activatePDP() {
+    return sendATCommand("AT+CGACT=1,1", "OK", 10000);
+  }
+
+  bool ping(const String& target) {
+    return sendATCommand("AT+QPING=\"" + target + "\"", "+QPING:", 15000);
+  }
+
+  bool sendSMS(const String& phoneNumber, const String& message) {
+    // ... (Implementation of sendSMS using sendATCommand) ...
+  }
+
+private:
+  HardwareSerial& lteSerial;
+  bool sendATCommand(String command, String expectedResponse, unsigned long timeout);
+};
+
+// In your main code:
+EC20U lte(Serial1);
+
+void setup() {
+  Serial.begin(115200);
+  lteSerial.begin(115200, SERIAL_8N1, lteRxPin, lteTxPin);
+
+  if (lte.checkSimReady()) {
+    Serial.println("SIM Ready.");
+    if (lte.registerNetwork()) {
+      Serial.println("Network Registered.");
+      if (lte.setupPDP("jionet")) {
+        Serial.println("PDP Setup Done.");
+        if (lte.activatePDP()) {
+          Serial.println("PDP Activated.");
+          if (lte.ping("8.8.8.8")) {
+            Serial.println("Ping Successful.");
+          } else {
+            Serial.println("Ping Failed.");
+          }
+          lte.sendSMS("+91...", "Hello");
+        } else {
+          Serial.println("PDP Activation Failed.");
+        }
+      } else {
+        Serial.println("PDP Setup Failed.");
+      }
+    } else {
+      Serial.println("Network Registration Failed.");
+    }
+  } else {
+    Serial.println("SIM Not Ready.");
+  }
+}
+
+// ... (loop and the actual sendATCommand function)
+
+
+Interpreting RSSI Values:
+
+RSSI values typically range from 0 to 31, where higher values indicate a stronger signal.
+You'll need to consult the EC200U-CN documentation or general GSM/LTE RSSI interpretation guides to understand the quality of the signal based on these values.
+Values around 20-30 are generally considered good. Lower values might indicate a weaker or unstable connection.
+
+
+AT+QNETDEVCTL=0,1,1
+
+Set HTTP Profile (Optional but Recommended): You can configure an HTTP profile with settings like connection timeout. Profile 0 is often the default.
+
+Code snippet
+
+AT+QHTTPCFG=<profile_id>,<header_mask>,<response_header_len>,<response_content_len>,<ssl_version>
+For a basic GET request, you might use:
+
+Code snippet
+
+AT+QHTTPCFG=0,1,256,1024
+0: Profile ID (default).
+1: Header mask (include standard headers).
+256: Maximum response header length.
+1024: Maximum response content length.
+Set the HTTP URL: Specify the URL you want to access. The length of the URL is important.
+
+Code snippet
+
+AT+QHTTPURL=<url_length>,"<URL>"
+Example for http://example.com:
+
+Code snippet
+
+AT+QHTTPURL=26,"http://example.com"
+26: Length of the URL string "http://example.com".
+"http://example.com": The URL you want to access.
+You should get an OK response if the command is accepted.
+
+Perform the HTTP GET Request: Initiate the GET request.
+
+Code snippet
+
+AT+QHTTPGET=[<timeout>]
+Example with a 60-second timeout (in milliseconds):
+
+Code snippet
+
+AT+QHTTPGET=60000
+You should get a response indicating the status of the GET request. The format we saw earlier was:
+
+OK
++QHTTPGET: <result_code>
+Where <result_code> (like 714) indicates the outcome.
+
+Read the HTTP Response Header (Optional but Useful): To get the standard HTTP status code and headers:
+
+Code snippet
+
+AT+QHTTPREAD=[<offset>],[<count>]
+To read the entire header, you might use:
+
+Code snippet
+
+AT+QHTTPREAD,0,256 // Assuming max header length set in QHTTPCFG
+The response will contain the HTTP status line (e.g., HTTP/1.1 200 OK) and the headers.
+
+Read the HTTP Response Content: To get the actual data from the webpage:
+
+Code snippet
+
+AT+QHTTPREAD=[<offset>],[<count>]
+To read the entire content (up to the configured response_content_len), you might use:
+
+Code snippet
+
+AT+QHTTPREAD,0,1024 // Assuming max content length set in QHTTPCFG
+The response will contain the HTML content of the page.

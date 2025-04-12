@@ -328,13 +328,13 @@ static const char * gscpcFileName = "PAYSOUND.INO";
 /*===================================== Function Prototypes =========================*/
 bool initDisplay( void );
 
-bool sendATCommand(String command, String expectedResponse, unsigned long timeout);
+bool sendATCommand(String command, String expectedResponse, unsigned long timeout, String *fullResponse = nullptr);
 void powerOnLteModule();
 bool checkSimStatus();
 bool checkNetworkRegistration();
 bool setupPDPContext();
 bool activatePDPContext();
-bool pingNetwork(String target);
+bool pingNetwork(String target, int contextId = 1, int timeout = 10000);
 void sendSMS(String phoneNumber, String message);
 bool connectToInternet();
 void connectAndMonitorInternetTask(void *pvParameters);
@@ -1126,9 +1126,15 @@ void lteSetup() {
   }
 }
 
+void TestHttpNetwork()
+{
+  sendATCommand("AT+QHTTPURL=26,\"http://example.com\"", "OK", 5000);
+  sendATCommand("AT+QHTTPGET=80", "+QHTTPGET:", 15000);
+}
 // --- Helper Functions ---
 
-bool sendATCommand(String command, String expectedResponse, unsigned long timeout) {
+// Modified sendATCommand to optionally return the full response
+bool sendATCommand(String command, String expectedResponse, unsigned long timeout, String *fullResponse  /*= nullptr */) {
   Serial.print("Sending AT: ");
   Serial.println(command);
   lteSerial.println(command);
@@ -1144,6 +1150,9 @@ bool sendATCommand(String command, String expectedResponse, unsigned long timeou
     if (response.indexOf(expectedResponse) != -1) {
       Serial.print("Response: ");
       Serial.println(response);
+      if (fullResponse != nullptr) {
+        *fullResponse = response;
+      }
       return true;
     }
     vTaskDelay(pdMS_TO_TICKS(yieldInterval)); // Allow other tasks to run
@@ -1151,6 +1160,9 @@ bool sendATCommand(String command, String expectedResponse, unsigned long timeou
 
   Serial.print("Timeout - No response or expected response not found: ");
   Serial.println(response);
+  if (fullResponse != nullptr) {
+    *fullResponse = response;
+  }
   return false;
 }
 
@@ -1178,7 +1190,14 @@ bool checkNetworkRegistration() {
 
 bool setupPDPContext() {
   Serial.println("Setting up PDP Context...");
-  return sendATCommand("AT+CGDCONT=1,\"IPV4V6\",\"" + APN + "\"", "OK", 5000);
+  return sendATCommand("AT+CGDCONT?", "OK", 5000);
+#if 0  
+  #if 0  
+    return sendATCommand("AT+CGDCONT=1,\"IPV4V6\",\"" + APN + "\"", "OK", 5000);
+  #else
+    return sendATCommand("AT+CGDCONT=1,\"IP\",\"" + APN + "\"", "OK", 5000);
+  #endif 
+#endif
 }
 
 bool activatePDPContext() {
@@ -1186,10 +1205,54 @@ bool activatePDPContext() {
   return sendATCommand("AT+CGACT=1,1", "OK", 10000);
 }
 
-bool pingNetwork(String target) {
+bool sendHTTPRequest(String url, String& responseContent) {
+  Serial.println("Setting HTTP URL: " + url);
+  String urlCommand = "AT+QHTTPURL=" + String(url.length()) + ",\"" + url + "\"";
+  if (!sendATCommand(urlCommand, "OK", 5000)) {
+    Serial.println("Failed to set HTTP URL.");
+    return false;
+  }
+
+  Serial.println("Performing HTTP GET...");
+  if (!sendATCommand("AT+QHTTPGET=60000", "+QHTTPGET:", 65000)) {
+    Serial.println("HTTP GET failed.");
+    return false;
+  }
+
+  // You might want to check the +QHTTPGET result code here
+
+  Serial.println("Reading HTTP Response Content...");
+  String readCommand = "AT+QHTTPREAD,0,1024"; // Adjust length as needed
+  String readResponse;
+  if (sendATCommand(readCommand, "+QHTTPREAD:", 10000, &readResponse)) {
+    int startIndex = readResponse.indexOf("\r\n\r\n") + 4; // Find the start of the content after headers
+    if (startIndex > 3 && startIndex < readResponse.length()) {
+      responseContent = readResponse.substring(startIndex);
+      Serial.println("HTTP Response Content:\n" + responseContent);
+      return true;
+    } else {
+      responseContent = readResponse;
+      Serial.println("Could not parse HTTP content:\n" + readResponse);
+      return true; // Or false depending on your error handling
+    }
+  } else {
+    Serial.println("Failed to read HTTP response.");
+    return false;
+  }
+}
+
+bool pingNetwork(String target, int contextId /*= 1 */, int timeout /*= 10000 */)
+{
   Serial.print("Pinging ");
-  Serial.println(target);
-  return sendATCommand("AT+QPING=\"" + target + "\"", "+QPING:", 15000);
+  Serial.print(target);
+  Serial.print(" with Context ID: ");
+  Serial.print(contextId);
+  Serial.print(" and Timeout: ");
+  Serial.print(timeout);
+  Serial.println("ms");
+
+  String command = "AT+QPING=" + String(contextId) + ",\"" + target + "\"," + String(timeout);
+  return sendATCommand(command, "+QPING:", timeout * 2); // Increase overall timeout for multiple pings
 }
 
 void sendSMS(String phoneNumber, String message) {
@@ -1221,6 +1284,27 @@ void sendSMS(String phoneNumber, String message) {
   }
 }
 
+void getSignalStrength() {
+  Serial.println("Getting Signal Strength...");
+  String response;
+  if (sendATCommand("AT+CSQ", "+CSQ:", 5000, &response)) {
+    // Response format: +CSQ: <rssi>,<ber>
+    int rssiStartIndex = response.indexOf("+CSQ:") + 6;
+    int commaIndex = response.indexOf(",", rssiStartIndex);
+    if (rssiStartIndex >= 6 && commaIndex > rssiStartIndex) {
+      String rssi = response.substring(rssiStartIndex, commaIndex);
+      Serial.print("Signal Strength (RSSI): ");
+      Serial.println(rssi);
+      // You can also extract the BER (Bit Error Rate) if needed
+    } else {
+      Serial.println("Failed to parse signal strength response.");
+      Serial.println("Raw CSQ Response: " + response);
+    }
+  } else {
+    Serial.println("Failed to get signal strength.");
+  }
+}
+
 // --- Internet Connection Management Task ---
 void connectAndMonitorInternetTask(void *pvParameters) {
   while (true) {
@@ -1230,6 +1314,8 @@ void connectAndMonitorInternetTask(void *pvParameters) {
       if (isLteModulePowered && isSimReady && isNetworkRegistered) {
         if (setupPDPContext()) {
           if (activatePDPContext()) {
+              delay(7000); // Wait 7 seconds before pinging
+               getSignalStrength();
             isNetworkConnected = true;
             Serial.println("Successfully connected to the internet!");
           } else {
@@ -1248,6 +1334,18 @@ void connectAndMonitorInternetTask(void *pvParameters) {
         Serial.println("Ping failed, assuming network disconnected.");
         isNetworkConnected = false;
       }
+
+      delay(5000);
+
+      // In your loop or another task:
+      String httpResponse = "";
+      if (sendHTTPRequest("http://example.com", httpResponse)) {
+        Serial.println("HTTP Request successful!");
+        // Process the httpResponse
+      } else {
+        Serial.println("HTTP Request failed.");
+      }
+
     }
     vTaskDelay(pdMS_TO_TICKS(5000)); // Wait for 5 seconds
   }
