@@ -109,8 +109,21 @@
 
 // Colors
 #define BG_COLOR 0x00008B      // Dark Blue
+
+#if 1
 #define TEXT_COLOR TFT_WHITE    // White
 #define HIGHLIGHT_COLOR 0xADD8E6 // Light Blue
+#else
+#define TEXT_COLOR TFT_BLACK    // White
+#define HIGHLIGHT_COLOR TFT_BLUE // Light Blue
+#endif
+
+
+#if 1
+#define MENU_BACKGROUND_COLOR   BG_COLOR
+#else
+#define MENU_BACKGROUND_COLOR   TFT_LIGHTGREY
+#endif
 
 // Keypad Navigation Mapping
 #define KEY_UP 'B'
@@ -220,13 +233,16 @@ int itemFontSize = 2;
 #define SBOX_PAY_SETTING_MENU      3
 
 
-// Menu Items with Icons (Basic Text Icons for this example)
-String gstrHomeMenuItems[] = {"QR Code Pay", "NFC Pay", "History", "Settings"};
-String gstrHomeMenuIcons[] = {"QR", "NFC", "Hist", "Set"};
+#define SBOX_SUBMENU_WIFI_CONNECT     0
+#define SBOX_SUBMENU_4GLTE_CONNECT    1
 
 // Menu Items with Icons (Basic Text Icons for this example)
-String gstrSettingMenuItems[] = {"Wifi", "4G LTE"};
-String gstrSettingMenuIcons[] = {"Y5", "4G"};
+char * gstrHomeMenuItems[] = {"QR Code Pay", "NFC Pay", "History", "Settings"};
+char * gstrHomeMenuIcons[] = {"QR", "NFC", "Hist", "Set"};
+
+// Menu Items with Icons (Basic Text Icons for this example)
+char * gstrSettingMenuItems[] = {"Wifi", "4G LTE"};
+char * gstrSettingMenuIcons[] = {"Y5", "4G"};
 
 int gi32HomeSelectItem = 0;
 int gi32HomePreviousItem = 0;
@@ -298,6 +314,8 @@ const char* gcpcCACertificate = \
 extern EventGroupHandle_t networkEventGroup;
 
 TaskHandle_t gtskNwMonitorHndl;
+
+unsigned char gui8CurrentMainMenu = 0;
 /*===================================== Private Variables ===========================*/
 
 static const char * gscpcFileName = "SOUNDBOXMGR.CPP";
@@ -307,6 +325,8 @@ static const char * gscpcFileName = "SOUNDBOXMGR.CPP";
 
 void connectAndMonitorInternetTask(void *pvParameters);
 bool IsInternetConnect( void );
+void promptWiFiConnection();
+void startMQTT();
 /*===================================== Function Definitions ========================*/
 
 /*
@@ -814,7 +834,7 @@ void GenerateAndDisplayQR( const char *upiData )
     // The display function is called by esp_qrcode_generate
 }
 
-void drawSettingScreen()
+void drawSettingScreen(  )
 {
     gTftDisplayHndl.fillScreen(BG_COLOR);
     gTftDisplayHndl.setTextColor(TEXT_COLOR);
@@ -846,37 +866,44 @@ void drawSettingScreen()
     gTftDisplayHndl.drawString(gstrSettingMenuItems[ui8SettingSelectItem], 25 + iconSize + textOffsetX - 5, yPos, 2);
 }
 
-void drawHomeScreen()
+void drawUIListScreen( char ** ppcMenuIcons, char ** ppcMenuItems, int MaximumListSize )
 {
-    gTftDisplayHndl.fillScreen(BG_COLOR);
+    gTftDisplayHndl.fillScreen(MENU_BACKGROUND_COLOR);   
+    delay(50);
+
     gTftDisplayHndl.setTextColor(TEXT_COLOR);
 
     // Draw Logo
     gTftDisplayHndl.setTextSize(logoFontSize);
     gTftDisplayHndl.setTextDatum(MC_DATUM);
     gTftDisplayHndl.drawString(logoText, logoX, logoY, 2);
+    delay(5);
 
     // Draw Menu Items
     gTftDisplayHndl.setTextSize(itemFontSize);
     gTftDisplayHndl.setTextDatum(ML_DATUM);
+    delay(5);
     
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < MaximumListSize; i++)
     {
         int yPos = itemStartY + i * itemSpacing;
         gTftDisplayHndl.setTextColor(TEXT_COLOR);
         gTftDisplayHndl.setTextSize(1);
-        gTftDisplayHndl.drawString(gstrHomeMenuIcons[i], 25, yPos, 2);
+        gTftDisplayHndl.drawString(ppcMenuIcons[i], 25, yPos, 2);
         gTftDisplayHndl.setTextSize(itemFontSize);
-        gTftDisplayHndl.drawString(gstrHomeMenuItems[i], 25 + iconSize + textOffsetX - 5, yPos, 2);
+        gTftDisplayHndl.drawString(ppcMenuItems[i], 25 + iconSize + textOffsetX - 5, yPos, 2);
     }
     //draw initial highlight
     int yPos = itemStartY + gi32HomeSelectItem * itemSpacing;
     gTftDisplayHndl.fillRect(10, yPos - 12, gTftDisplayHndl.width() - 20, 24, HIGHLIGHT_COLOR);
+    delay(50);
     gTftDisplayHndl.setTextColor(TEXT_COLOR);
     gTftDisplayHndl.setTextSize(1);
-    gTftDisplayHndl.drawString(gstrHomeMenuIcons[gi32HomeSelectItem], 25, yPos, 2);
+    gTftDisplayHndl.drawString(ppcMenuIcons[gi32HomeSelectItem], 25, yPos, 2);
+    delay(5);
     gTftDisplayHndl.setTextSize(itemFontSize);
-    gTftDisplayHndl.drawString(gstrHomeMenuItems[gi32HomeSelectItem], 25 + iconSize + textOffsetX - 5, yPos, 2);
+    gTftDisplayHndl.drawString(ppcMenuItems[gi32HomeSelectItem], 25 + iconSize + textOffsetX - 5, yPos, 2);
+    delay(5);
 }
 
 void UpdateSettingSelection(char key)
@@ -884,31 +911,33 @@ void UpdateSettingSelection(char key)
 
 }
 
-void UpdateUISelection(char key)
+void UpdateUISelection(char key, char ** ppcMenuIcons, char ** ppcMenuItems, int MaximumListSize )
 {
     if ( key == KEY_UP )
     {
         gi32HomePreviousItem = gi32HomeSelectItem;
         gi32HomeSelectItem--;
         if (gi32HomeSelectItem < 0)
-            gi32HomeSelectItem = 3;
+            gi32HomeSelectItem = ;
         //erase previous highlight
         int yPos = itemStartY + gi32HomePreviousItem * itemSpacing;
-        gTftDisplayHndl.fillRect(10, yPos - 12, gTftDisplayHndl.width() - 20, 24, BG_COLOR);
+        gTftDisplayHndl.fillRect(10, yPos - 12, gTftDisplayHndl.width() - 20, 24, MENU_BACKGROUND_COLOR);
+        delay(10);
         gTftDisplayHndl.setTextColor(TEXT_COLOR);
         gTftDisplayHndl.setTextSize(1);
-        gTftDisplayHndl.drawString(gstrHomeMenuIcons[gi32HomePreviousItem], 25, yPos, 2);
+        gTftDisplayHndl.drawString(ppcMenuIcons[gi32HomePreviousItem], 25, yPos, 2);
         gTftDisplayHndl.setTextSize(itemFontSize);
-        gTftDisplayHndl.drawString(gstrHomeMenuItems[gi32HomePreviousItem], 25 + iconSize + textOffsetX - 5, yPos, 2);
+        gTftDisplayHndl.drawString(ppcMenuItems[gi32HomePreviousItem], 25 + iconSize + textOffsetX - 5, yPos, 2);
 
         //draw new highlight
         yPos = itemStartY + gi32HomeSelectItem * itemSpacing;
         gTftDisplayHndl.fillRect(10, yPos - 12, gTftDisplayHndl.width() - 20, 24, HIGHLIGHT_COLOR);
+        delay(10);
         gTftDisplayHndl.setTextColor(TEXT_COLOR);
         gTftDisplayHndl.setTextSize(1);
-        gTftDisplayHndl.drawString(gstrHomeMenuIcons[gi32HomeSelectItem], 25, yPos, 2);
+        gTftDisplayHndl.drawString(ppcMenuIcons[gi32HomeSelectItem], 25, yPos, 2);
         gTftDisplayHndl.setTextSize(itemFontSize);
-        gTftDisplayHndl.drawString(gstrHomeMenuItems[gi32HomeSelectItem], 25 + iconSize + textOffsetX - 5, yPos, 2);
+        gTftDisplayHndl.drawString(ppcMenuItems[gi32HomeSelectItem], 25 + iconSize + textOffsetX - 5, yPos, 2);
     }
     else if ( key == KEY_DOWN )
     {
@@ -919,20 +948,22 @@ void UpdateUISelection(char key)
         //erase previous highlight.
         int yPos = itemStartY + gi32HomePreviousItem * itemSpacing;
         gTftDisplayHndl.fillRect(10, yPos - 12, gTftDisplayHndl.width() - 20, 24, BG_COLOR);
+        delay(10);
         gTftDisplayHndl.setTextColor(TEXT_COLOR);
         gTftDisplayHndl.setTextSize(1);
-        gTftDisplayHndl.drawString(gstrHomeMenuIcons[gi32HomePreviousItem], 25, yPos, 2);
+        gTftDisplayHndl.drawString(ppcMenuIcons[gi32HomePreviousItem], 25, yPos, 2);
         gTftDisplayHndl.setTextSize(itemFontSize);
-        gTftDisplayHndl.drawString(gstrHomeMenuItems[gi32HomePreviousItem], 25 + iconSize + textOffsetX - 5, yPos, 2);
+        gTftDisplayHndl.drawString(ppcMenuItems[gi32HomePreviousItem], 25 + iconSize + textOffsetX - 5, yPos, 2);
 
         //draw new highlight
         yPos = itemStartY + gi32HomeSelectItem * itemSpacing;
         gTftDisplayHndl.fillRect(10, yPos - 12, gTftDisplayHndl.width() - 20, 24, HIGHLIGHT_COLOR);
+        delay(10);
         gTftDisplayHndl.setTextColor(TEXT_COLOR);
         gTftDisplayHndl.setTextSize(1);
-        gTftDisplayHndl.drawString(gstrHomeMenuIcons[gi32HomeSelectItem], 25, yPos, 2);
+        gTftDisplayHndl.drawString(ppcMenuIcons[gi32HomeSelectItem], 25, yPos, 2);
         gTftDisplayHndl.setTextSize(itemFontSize);
-        gTftDisplayHndl.drawString(gstrHomeMenuItems[gi32HomeSelectItem], 25 + iconSize + textOffsetX - 5, yPos, 2);
+        gTftDisplayHndl.drawString(ppcMenuItems[gi32HomeSelectItem], 25 + iconSize + textOffsetX - 5, yPos, 2);
     }
 }
 
@@ -944,6 +975,7 @@ void handleUserSelection( char key )
   }
 
   gTftDisplayHndl.fillScreen( BG_COLOR );
+  delay(10);
   gTftDisplayHndl.setTextColor ( TEXT_COLOR );
   gTftDisplayHndl.setTextSize( 2 );
 
@@ -951,11 +983,26 @@ void handleUserSelection( char key )
 
   Serial.println( gi32HomeSelectItem );
 
+  if ( SBOX_PAY_SETTING_MENU == gui8CurrentMainMenu  )
+  {
+    promptWiFiConnection( );
+
+    delay ( 1000 );
+
+    Serial.println( "Drawing Home Screen :" );
+
+    gui8CurrentMainMenu = SBOX_PAY_UPI_PAY_NOW;
+
+    drawUIListScreen( gstrHomeMenuIcons, gstrHomeMenuItems, ARRAY_LENGTH( gstrHomeMenuIcons ) );
+
+    return;
+  }
+
   if ( ( !IsInternetConnect( ) ) && ( SBOX_PAY_SETTING_MENU != gi32HomeSelectItem ))
   {
     gTftDisplayHndl.println("Please connect internet 4G or Wifi...");
     delay ( 5000 ); 
-    drawHomeScreen( ); 
+    drawUIListScreen( gstrHomeMenuIcons, gstrHomeMenuItems, ARRAY_LENGTH( gstrHomeMenuIcons ) );
     return;
   }
 
@@ -971,7 +1018,7 @@ void handleUserSelection( char key )
       String upi_string = CreateUPIString(amount.toFloat());
       GenerateAndDisplayQR(upi_string.c_str()); // Pass as const char*
       delay(5000); // Display QR code for 5 seconds
-
+      Serial.println("Implement the QR code preference");
     }
       break; /* PSB_PAY_UPI */
 
@@ -980,7 +1027,7 @@ void handleUserSelection( char key )
       Serial.println("Pay NFC cardless ");
       gTftDisplayHndl.println("Ready for NFC...");
       delay(1000);
-      drawHomeScreen( );          
+      drawUIListScreen( gstrHomeMenuIcons, gstrHomeMenuItems, ARRAY_LENGTH( gstrHomeMenuIcons ) );         
       
     }
       break; /* PSB_PAY_NFC_CARDLESS */
@@ -988,7 +1035,8 @@ void handleUserSelection( char key )
     case SBOX_PAY_SETTING_MENU:
     {
       Serial.println("Pay setting menu");
-      drawSettingScreen( );           
+      gui8CurrentMainMenu = SBOX_PAY_SETTING_MENU;
+     drawUIListScreen( gstrSettingMenuIcons, gstrSettingMenuItems, ARRAY_LENGTH( gstrSettingMenuIcons ) );            
     }
       break; /* PSB_PAY_HISTORY_STATUS */
 
@@ -997,7 +1045,7 @@ void handleUserSelection( char key )
       Serial.println("Last Pay amount play");
       gTftDisplayHndl.println("Payment History...");
       delay(1000);
-      drawHomeScreen( );            
+      drawUIListScreen( gstrHomeMenuIcons, gstrHomeMenuItems, ARRAY_LENGTH( gstrHomeMenuIcons ) );            
     }
       break; /* PSB_PAY_HISTORY_STATUS */
     default:
@@ -1024,10 +1072,10 @@ bool initDisplay( void )
     {
 
 	    gTftDisplayHndl.init();
-	    gTftDisplayHndl.setRotation(0);
+	    gTftDisplayHndl.setRotation(1);
 	    gTftDisplayHndl.fillScreen(BG_COLOR);
-
-	    drawHomeScreen();
+      delay(10);
+	    drawUIListScreen( gstrHomeMenuIcons, gstrHomeMenuItems, ARRAY_LENGTH( gstrHomeMenuIcons ) );
 
       gbDisplayConnecStatus = true;
     }
@@ -1114,6 +1162,7 @@ void InitAllmodules( void )
                 , &gtskMainProcessHndl );
   #endif
 
+  startMQTT();
 #if 0
     /* Pay Sound Box Manager thread create */
     xTaskCreate(  connectAndMonitorInternetTask
@@ -1146,7 +1195,16 @@ void MainRunLoop()
     {
         Serial.print("Key Pressed: ");
         Serial.println( cKeyEvent );
-        UpdateUISelection( cKeyEvent );
+        
+        if ( SBOX_PAY_SETTING_MENU == gui8CurrentMainMenu  )
+        {
+          UpdateUISelection( cKeyEvent, gstrSettingMenuIcons, gstrSettingMenuItems, ARRAY_LENGTH( gstrSettingMenuIcons ) );
+        }
+        else
+        {
+           UpdateUISelection( cKeyEvent, gstrHomeMenuIcons, gstrHomeMenuItems, ARRAY_LENGTH( gstrHomeMenuIcons ) );
+        }
+       
         handleUserSelection( cKeyEvent );
     }
 

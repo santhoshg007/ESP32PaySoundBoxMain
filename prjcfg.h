@@ -198,6 +198,10 @@ typedef enum tageMQTTStateErrorCode
 #define EVT_4G_CONNECTING   (1 << 4)
 #define EVT_INTERNET_CONNECTED (EVT_WIFI_CONNECTED | EVT_4G_CONNECTED) //helper
 
+
+
+#define ARRAY_LENGTH( __array_base__ )      ( sizeof( __array_base__ ) / sizeof( __array_base__[0] ) )
+
 /*=====================================typedef=====================================================() */
 
 // Struct to send data through the message queue

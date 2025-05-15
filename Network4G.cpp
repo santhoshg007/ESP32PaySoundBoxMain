@@ -284,7 +284,7 @@ bool MQTT_Reconnect( void )
 {
   boolean  bRetMqttConnectStatus = true;
 
-  while ( ! gMQTTClient.connected() )
+  while (  IsInternetConnect() && !gMQTTClient.connected() )
   {
     Serial.print("Attempting MQTT connection...");
 
@@ -365,26 +365,29 @@ void MQTT_ResponseCallback( char* pcMqttSubcTopic, byte* pcPayload, unsigned int
 void MQTT_MonitorTask( void* parameter )
 {
 
-  gMQTTClient.setServer( cgpcMqttServer, cgpi16MqttPort );
-  gMQTTClient.setCallback( MQTT_ResponseCallback );
+    Serial.println("MQTT and monitor thread start...");
+    //InitLTEModule();
 
-  while ( true )
-  {
-    if (!(xEventGroupGetBits(networkEventGroup) & EVT_INTERNET_CONNECTED)) 
+    gMQTTClient.setServer( cgpcMqttServer, cgpi16MqttPort );
+    gMQTTClient.setCallback( MQTT_ResponseCallback );
+
+    while ( true )
     {
-        Serial.println("MQTT Task: No internet connection.  Stopping MQTT.");
-        stopMQTT();
-        vTaskDelay(pdMS_TO_TICKS(5000)); //check again in 5 seconds.
-        continue;
-    }
+        if (!(xEventGroupGetBits(networkEventGroup) & EVT_INTERNET_CONNECTED)) 
+        {
+            Serial.println("MQTT Task: No internet connection.  Stopping MQTT.");
+            //stopMQTT();
+            vTaskDelay(pdMS_TO_TICKS(5000)); //check again in 5 seconds.
+            continue;
+        }
 
-    if (!gMQTTClient.connected()) {
-        MQTT_Reconnect( );
+        if (!gMQTTClient.connected()) {
+            MQTT_Reconnect( );
+        }
+        
+        gMQTTClient.loop(); // Keep MQTT connection alive
+        vTaskDelay(pdMS_TO_TICKS(5000)); // Delay for 1 second.  Use FreeRTOS delay.     
     }
-    
-    gMQTTClient.loop(); // Keep MQTT connection alive
-    vTaskDelay(pdMS_TO_TICKS(1000)); // Delay for 1 second.  Use FreeRTOS delay.     
-  }
 }
 /*}}*/
 
@@ -527,6 +530,9 @@ bool httpsGetRequest(const char* host, const char* path, String& response)
 void drawSSIDList( int startIdx, int highlightIdx, int totalNetworks) 
 {
     gTftDisplayHndl.fillRect(0, 0, gTftDisplayHndl.width(), gTftDisplayHndl.height() - 30, SCAN_LIST_BG_COLOR); // Set grey background
+   
+    delay(50);
+
     gTftDisplayHndl.setTextSize(2);
     gTftDisplayHndl.setCursor(10, 0);
     gTftDisplayHndl.setTextColor(TEXT_COLOR, SCAN_LIST_BG_COLOR);
@@ -538,6 +544,7 @@ void drawSSIDList( int startIdx, int highlightIdx, int totalNetworks)
         if ( i == highlightIdx ) 
         {
             gTftDisplayHndl.fillRect(5, y - 2, gTftDisplayHndl.width() - 10, 22, TFT_BLUE);
+            delay(50);
             gTftDisplayHndl.setTextColor(TFT_WHITE, TFT_BLUE);
         } 
         else
@@ -551,51 +558,65 @@ void drawSSIDList( int startIdx, int highlightIdx, int totalNetworks)
             ssid = ssid.substring(0, 17) + "..."; // Truncate long SSID names
         }
         gTftDisplayHndl.print(ssid);
+        delay(10);
     }
 }
 
 void drawActionBar()
 {
     gTftDisplayHndl.fillRect(0, gTftDisplayHndl.height() - 30, gTftDisplayHndl.width(), 30, TFT_DARKGREY);  // Footer bar
+    delay(50);
     gTftDisplayHndl.setTextColor(TFT_WHITE);
     gTftDisplayHndl.setTextSize(2);
     gTftDisplayHndl.setCursor(10, gTftDisplayHndl.height() - 24);
-    gTftDisplayHndl.print("[D]Select");
+    gTftDisplayHndl.print("[D]Sel");
+    delay(10);
 
     gTftDisplayHndl.setCursor(gTftDisplayHndl.width() - 110, gTftDisplayHndl.height() - 24);
     gTftDisplayHndl.print("[*]Cancel");
+    delay(10);
     gTftDisplayHndl.setCursor(gTftDisplayHndl.width() - 220, gTftDisplayHndl.height() - 24);
-    gTftDisplayHndl.print("[#]Refresh");
+    gTftDisplayHndl.print("[#]Ref");
+    delay(10);
 }
 
 void drawPasswordScreen(const char* selectedSSID) 
 {
+    delay(50);
     gTftDisplayHndl.fillScreen(PASSWORD_BG_COLOR); // Set background color
+    delay(50);// Give the display time to settle
+
     gTftDisplayHndl.setTextColor(TFT_BLACK, PASSWORD_BG_COLOR);
     gTftDisplayHndl.setTextSize(2);
     gTftDisplayHndl.setCursor(10, 10);
 
     // Show selected SSID
     gTftDisplayHndl.print("SSID: ");
+    delay(10);
     gTftDisplayHndl.println(selectedSSID);
+    delay(10);
 
     // Prompt for password
     gTftDisplayHndl.setCursor(10, 40);
     gTftDisplayHndl.print("Enter Password:");
+    delay(10);
 
     // Password display area
     gTftDisplayHndl.fillRect(10, 70, gTftDisplayHndl.width() - 20, 24, TFT_WHITE); // White background for password
+    delay(50);
     gTftDisplayHndl.setTextColor(TFT_BLACK);
     gTftDisplayHndl.setCursor(15, 74); // Start position for the asterisks
 
     // Show bottom bar (Connect / Cancel)
     gTftDisplayHndl.fillRect(0, gTftDisplayHndl.height() - 30, gTftDisplayHndl.width(), 30, TFT_DARKGREY);  // Footer bar
+    delay(50);
     gTftDisplayHndl.setTextColor(TFT_WHITE);
     gTftDisplayHndl.setTextSize(2);
     gTftDisplayHndl.setCursor(10, gTftDisplayHndl.height() - 24);
-    gTftDisplayHndl.print("[D] Connect");
+    gTftDisplayHndl.print("[D]Connect");
+    delay(3);
     gTftDisplayHndl.setCursor(gTftDisplayHndl.width() - 110, gTftDisplayHndl.height() - 24);
-    gTftDisplayHndl.print("[*] Cancel");
+    gTftDisplayHndl.print("[*]Cancel");
 
     // Input password
     int i = 0;
@@ -646,10 +667,12 @@ bool connectToWiFiNetwork( const char* ssid, const char* password )
     WiFi.begin(ssid, password);
 
     gTftDisplayHndl.fillScreen(PASSWORD_BG_COLOR);
+    delay(50);
     gTftDisplayHndl.setTextColor(TFT_BLACK, PASSWORD_BG_COLOR);
     gTftDisplayHndl.setCursor(10, 40);
     gTftDisplayHndl.setTextSize(2);
     gTftDisplayHndl.println("Connecting...");
+    delay(20);
 
     unsigned long startAttemptTime = millis();
     const unsigned long timeout = 15000;
@@ -664,6 +687,7 @@ bool connectToWiFiNetwork( const char* ssid, const char* password )
     {
         isWifiConnected = true;
         gTftDisplayHndl.fillScreen(TFT_GREEN);
+        delay(50);
         gTftDisplayHndl.setCursor(10, 40);
         gTftDisplayHndl.setTextColor(TFT_BLACK);
         gTftDisplayHndl.setTextSize(2);
@@ -677,6 +701,7 @@ bool connectToWiFiNetwork( const char* ssid, const char* password )
     {
         isWifiConnected = false;
         gTftDisplayHndl.fillScreen(TFT_RED);
+        delay(50);
         gTftDisplayHndl.setCursor(10, 40);
         gTftDisplayHndl.setTextColor(TFT_WHITE);
         gTftDisplayHndl.setTextSize(2);
@@ -689,6 +714,7 @@ bool connectToWiFiNetwork( const char* ssid, const char* password )
 void promptWiFiConnection() 
 {
     gTftDisplayHndl.fillScreen(TFT_BLACK);
+    delay(50);
     gTftDisplayHndl.setRotation(1);
 
     Serial.println("[WIFI_SCAN] Starting WiFi scan...");
@@ -764,6 +790,7 @@ void promptWiFiConnection()
 
     // Move to password entry screen
     Serial.printf("[PASSWORD] Moving to password entry for SSID: %s\n", gacSSID);
+    delay(50);// Give the display time to settle
     drawPasswordScreen(gacSSID);
 
     if ( gbWifiConnectCanceled )
@@ -815,11 +842,14 @@ void connectToInternet()
 
 void connectAndMonitorInternetTask( void *pvParameters ) 
 {
+    Serial.println("Connection and monitor thread start...");
+    InitLTEModule();
+
     while (true) 
     {
         if (!(xEventGroupGetBits(networkEventGroup) & EVT_INTERNET_CONNECTED)) 
         {
-             connectToInternet();
+             //connectToInternet();
 
              if ( is4GConnected ) 
              {

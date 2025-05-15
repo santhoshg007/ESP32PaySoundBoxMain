@@ -1,0 +1,2421 @@
+
+
+Expand :
+-------------
+1. NMEA stands for National Marine Electronics Association.
+x`
+--------------------
+Linux Command 
+--------------------
+1. uname :
+	The uname command is used to check the complete OS information of the system. Check out the command and the output below
+2.  ln command in Linux :
+	The ln command is used to create a shortcut link to another file. This is among the most important Linux commands to know if you want to operate as a Linux administrator.
+3. man :
+4. whoami :
+	The whoami command provides basic information that is extremely useful when working on multiple systems. In general, if you are working with a single computer, you will not require it as frequently as a network administrator.
+
+5. sort :
+
+6. find :
+	6.1  Find files by name :
+		
+7. PS1 Escape Sequence :
+	Common PS1 Escape Sequences:
+	\u: Username of the current user.
+	\h: Hostname up to the first period.
+	\w: Current working directory (full path).
+	\W: Basename of the current working directory (last folder).
+	\d: Current date in the format Weekday Month Day.
+	\t: Current time in 24-hour HH:MM:SS format.
+	\T: Current time in 12-hour HH:MM:SS format.
+	\@: Current time in 12-hour AM/PM format.
+
+8. Git Command : [https://github.com/santhoshg007/Project.git]
+	echo "# Project" >> README.md
+	git init
+	git add README.md
+	git commit -m "first commit"
+	git branch -M main
+	git remote add origin https://github.com/santhoshg007/Project.git
+	git push -u origin main
+
+	git remote add origin https://github.com/santhoshg007/Project.git
+	git branch -M main
+	git push -u origin main
+	
+	(8.1) If you have multiple remotes configured get url status :
+		$ git remote -v
+	(8.2) Get the url :
+		$ git remote get-url origin
+	(8.3) To get the revision ID :
+		(8.3.1) Revision ID :
+			$ git rev-parse HEAD
+			or
+			$ git log -1 --format=%H
+		(8.3.2) Short form :
+			$ git log -1 --abbrev-commit --format=%H
+		(8.3.3) Get the commit ID and related information: 
+			$ git log -1
+		(8.3.4) To get the last commit date pretty format :
+			$ git log -1 --format=%cd --date=default
+		(8.3.5) To get the last commit author name :
+			$ git log -1 --format=%an
+
+	(8.4) Git add :
+		git clone https://santhoshg2@bitbucket.org/myboxiot/dashcam_hal_sdk_prox_gps.git
+		$ git add -A -f ./
+		$ git commit -m "Fix bug in user authentication"
+			or
+		git commit --file=./path/to/message-file.txt
+
+		$  git push origin main
+		
+
+		User name : santhoshg2@bitbucket.org/myboxiot/dashcam_hal_sdk_prox_gps.git
+		
+		Facing eror :
+			numerating objects: 97828, done.
+		Counting objects: 100% (97828/97828), done.
+		Delta compression using up to 12 threads
+		Compressing objects: 100% (95586/95586), done.
+		Writing objects: 100% (97827/97827), 1.44 GiB | 10.54 MiB/s, done.
+		Total 97827 (delta 15879), reused 0 (delta 0), pack-reused 0
+		remote: Resolving deltas: 100% (15879/15879), done.
+		remote: Checking connectivity: 97827, done.
+		remote: WARNING: Your push includes at least one file that is 50 MB or more. Bitbucket Cloud recommends using Git LFS for large files to prevent repositories from growing too large and reaching the 4 GB repo size limit. Learn more about Git LFS at https://support.atlassian.com/bitbucket-cloud/docs/manage-large-files-with-git-large-file-storage-lfs/. If your repository reaches the 4 GB size limit, all pushes will be blocked. Learn more about the repository size limit at https://support.atlassian.com/bitbucket-cloud/docs/reduce-repository-size/.
+		To https://bitbucket.org/myboxiot/dashcam_hal_sdk_prox_gps.git
+		   b32933f..d82d0b1  main -> main
+
+
+	(8.5) Added Sub Module :
+		(8.5.1)Add the second external repository as a submodule: Y
+			git submodule add <repository-url-2> <subdirectory-path>
+		
+			example :
+				git submodule add https://github.com/username/external-repo.git external-repo
+				
+				or
+				
+				git submodule add https://santhoshg2@bitbucket.org/myboxiot/dashcam_hal.git HeroSrc dashCam_Single_Stream_LC_1296_GPS
+
+				
+		(8.5.2) Initialize and fetch the submodule content: 
+			$ git submodule update --init --recursive
+		
+		(8.5.3) Commit the submodule addition
+			$ git commit -m "Added external-repo as a submodule"
+		
+		(8.5.4) Push your changes to your remote:
+			$ git push origin main
+
+	(5.6) Git Subtree (Integrating Two Repositories as One)
+		(5.6.1) Clone the first repository :
+			$ git clone <repository-url-1> <main-repo>
+		(5.6.2) Add the second external repository as a remote:
+			$ git remote add external-repo <repository-url-2>
+		(5.6.3) Fetch the external repository:
+			$ git fetch external-repo
+		(5.6.4) Add the external repository’s content into your project as a subtree:
+			$ git read-tree --prefix=<subdirectory-path>/ -u external-repo/main
+			
+			example:
+			git read-tree --prefix=external-repo/ -u external-repo/main
+		(5.6.5) Commit the changes: 
+			git commit -m "Merged external repository as a subtree"
+		
+		(5.6.6) Push the changes to your remote repository:
+			$ git push origin main
+
+	(5.7) Manifest  Respostiory :
+		(5.7.1) mkdir my_project && cd my_project
+		(5.7.2) Initialize the repo tool:
+			$ repo init -u <manifest-url> -b <branch-name>
+			Example :
+				repo init -u https://github.com/username/manifest-repo.git -b master
+		(5.7.3) Sync the Repositories :
+			$ repo sync
+
+		
+		URL : git clone https://santhoshg2@bitbucket.org/myboxiot/dashcam_hal.git
+		VSDK : git clone https://santhoshg2@bitbucket.org/myboxiot/dashcam_hal_sdk_prox_gps.git
+		
+	(5.8) To ask the password :
+		$ git config --global credential.helper store [permanent]
+		$ git config --global credential.helper cache [Temporary cache]
+
+	(5.9) .gitignore edit :
+		(5.9.1) Open or create a .gitignore file in the root directory of your repository. 
+		(5.9.2) Add the following line to ignore all *.o files and Save the .gitignore file.
+			>>
+			*.o
+			<<
+		(5.9.3) git rm -r --cached .
+		(5.9.4) git add .
+		(5.9.5) git commit -m "Update .gitignore to exclude *.o files"
+	
+	(5.10) Undo the Last Commit (Keep Changes) :
+		If you want to undo the last commit but keep the changes in your working directory, you can use:
+		$ git reset --soft HEAD~1
+
+	(5.11) Export the modified files :
+		$ git diff --name-only
+		$ git diff --name-only | git archive --format=zip --output=modified_files.zip --files-from=-
+		
+		
+		or
+		
+		git diff --name-only | git archive --format=tar --output=/path/to/output/directory/modified_files.tar --files-from=-	
+
+		
+		name-only: Lists only the names of the modified files.
+		--files-from=-: Tells git archive to use the list of files from the input (the output of the git diff command).
+		
+		For Staged Files  :
+			$ git diff --cached --name-only | git archive --format=zip --output=staged_files.zip --files-from=-
+			
+			
+		Archive :
+			git diff --name-only > modified_files.txt
+			tar -cvf ../../backup/modified_files.tar -T modified_files.txt
+			
+			Add folder in the existing tar;
+				tar -rvf existing-archive.tar folder-to-add/	
+
+
+
+		
+		
+9. To find the insert USB uart Device :
+	(9.1) dmesg | grep -i tty
+	(9.2) lsusb
+	(9.3) ls /dev/tty*
+
+10. To Find the version Ubuntu:
+	(10.1) lsb_release -a
+
+11. To install Install Apache
+	(11.1) sudo apt install apache2
+	(11.2) Start Apache :
+		$ sudo systemctl start apache2
+	(11.3) Enable Apache to start at boot
+		$ sudo systemctl enable apache2
+	(11.4)  Verify Apache is running :
+		$ sudo systemctl status apache2
+	(11.5) Adjust Firewall (if needed) : Uncomplicated Firewall
+		$ sudo ufw allow 'Apache'
+		
+		 verify that the firewall rule was added successfull :
+		 $ sudo ufw status
+	(11.6) To Test Apache :
+		$ http://localhost
+
+12. To install Samba (SMB server)  :
+	(12.1) sudo apt install samba
+	(12.2)	start and Enable Samba Service :
+		(*) Start Samba:
+			$ sudo systemctl start smbd
+		(*) Enable Samba to start on boot:
+			$ sudo systemctl enable smbd
+	(12.3) Check the status of the Samba service
+		$ sudo systemctl status smbd
+	(12.4) Configure Samba (optional) :
+		Samba's main configuration file is located at /etc/samba/smb.conf.
+		
+		Example of Sharing a Directory:
+			$ sudo nano /etc/samba/smb.conf
+			
+		Add the following at the end of the file to share a directory (e.g., /home/username/share):
+			[share]
+			   path = /home/username/share
+			   browsable = yes
+			   read only = no
+			   guest ok = no
+			   valid users = username
+			   
+			Explanation:
+
+				path: Specifies the directory you want to share.
+				browsable: If yes, the share will be visible when browsing shares.
+				read only: If no, users can write to the share.
+				guest ok = no: Disables guest access (meaning users will need to authenticate with a password).
+				valid users = username: Specifies the username(s) that are allowed to access the share. You can list multiple usernames separated by spaces, or use groups.
+
+	(12.5) Save the file and restart Samba:
+		$ sudo systemctl restart smbd
+	(12.6) Set Samba user and password :
+		If you want to restrict access to your Samba shares, you'll need to create a Samba user (it can be an existing Linux user).
+		
+		sudo useradd Project
+		(*) Add a Samba user:	
+			sudo smbpasswd -a username
+			- Replace username with the Linux user you want to give access to the Samba share.
+			Example :
+				$ sudo smbpasswd -a santhosh
+
+		Enable the Samba user:
+			sudo smbpasswd -e username
+			Example :
+				$ sudo smbpasswd -e santhosh
+			
+		The user will now be able to authenticate and access the shared directory.
+
+	(12.7) Verify the Share:
+		(*) On Windows :
+			\\<your-ubuntu-server-ip>\share
+		(*) On Linux :
+			$ smbclient //your-ubuntu-server-ip/share -U username
+			
+			or
+			$ smbclient //localhost/share -U username
+			Example :
+				$ smbclient //localhost/share -U uhsername
+
+		(*) Optional: Configure Firewall (if necessary)
+ 			$ sudo ufw allow samba
+ 	
+ 	(12.8) Check for existing Samba users :
+ 		$ sudo pdbedit -L
+ 	
+ 	(12.9) Create a Group:
+ 		sudo groupadd projectgroup
+		
+		Add Users to the Group :
+			1. sudo usermod -aG projectgroup Project
+			2. sudo usermod -aG projectgroup share
+			groups Project
+
+
+ 		
+
+ 		qubo#$008!
+
+
+13. Editing a file in 'nano' :
+	(13.1) Edit the file as needed in `nano`.
+	(13.2)To save the file :
+	   	$  Ctrl + O
+	   	$ Enter
+	 (13.3) To exit `nano`
+		   (*) Ctrl + X to exit.
+		   (*) If you have unsaved changes, `nano` will ask if you want to save them. You can either:
+			     - Press **`Y`** to confirm saving.
+			     - Press **`N`** to discard changes.
+
+
+14. Squasfs :
+	(14.1)	Create a SquashFS image:
+			$ mksquashfs /source_dir /path_to_output_image.sqfs
+		
+		Example :
+			$ mksquashfs squafsroot/ ./squasfsroot.sqf
+			or
+			$ mksquashfs squafsroot/ ./squasfsroot.sqf -comp gzip -all-root
+		
+		This creates a SquashFS image of the specified directory (/source_dir).
+
+	(14.2) Mount a SquashFS image:
+			$ mount -t squashfs /path_to_image.sqfs /mount_point -o loop
+		
+		Example :
+			$ mount -t squashfs ./squasfsroot.sqfs /mnt/sqfs-drv -o loop
+			or
+			$ sudo mount -o loop ./squasfsroot.sqfs /mnt/sqf
+
+		
+		This mounts the SquashFS image to a mount point, allowing you to read from it as if it were a regular directory.
+
+	(14.3) List contents of SquashFS:
+			$ unsquashfs -l /path_to_image.sqfs
+		
+		Example :
+			$ unsquashfs -l ./squasfsroot.sqf
+		
+		This command lists the files and directories inside the SquashFS image.
+
+	(14.4) Extract a SquashFS image:
+		unsquashfs /path_to_image.sqfs
+		
+		This extracts the content of the SquashFS image to the current directory.
+
+	(14.5) To unmount a SquashFS image :
+		(14.5.1) Check the current mount points :
+			$ mount | grep squashfs
+		(14.5.2) Unmount the SquashFS :
+			$ sudo umount /mnt/squashfs
+
+
+	(14.6) making read and write file system :
+		(14.6.1) commands to create these directories:
+			$ sudo mkdir /mnt/squashfs      # The directory for the SquashFS mount (read-only).
+			$ sudo mkdir /mnt/squashfs_rw   # The directory for the writable layer (upperdir).
+			$ sudo mkdir /mnt/squashfs_work # The work directory for OverlayFS.
+
+		(14.6.2) Mount OverlayFS :
+			$ sudo mount -t overlay -o lowerdir=/mnt/squashfs,upperdir=/mnt/squashfs_rw,workdir=/mnt/squashfs_work /mnt/squashfs_overlay
+			Example :
+			$ sudo mount -t overlay -o lowerdir=/mnt/squashfs,upperdir=/mnt/squashfs_rw,workdir=/mnt/squashfs_work /mnt/squashfs_overlay
+			
+			or <working>
+			$ sudo mount -t overlay overlay -o lowerdir=/mnt/sqfsdashcam,upperdir=/mnt/sqfsdashcam_rw,workdir=/mnt/sqfsdashcamupperwork /mnt/squashfs_overlay
+		<INFO>
+
+
+
+15. Kernel configuration :
+	<ERROR_SNIPPET>
+		santhosh@QML184-SantoshG:~/Project/Module1/Ispahan/kernel$ make menuconfig
+		make[1]: Entering directory '/home/santhosh/Project/Module1/Ispahan/kernel'
+		  HOSTCC  scripts/kconfig/mconf.o
+		<command-line>: fatal error: curses.h: No such file or directory
+	<SOLUTION>
+		$ sudo apt-get install libncurses5-dev libncursesw5-dev
+
+
+16. vim :
+	(16.1) i to enter insert mode
+	(16.2) ESC to exit insert mode
+	(16.3) :wq to save and quit
+	(16.3) Basic Commands
+		Insert Mode: Press i to enter insert mode and start typing.
+		Normal Mode: Press ESC to return to normal mode.
+		Save and Quit: Type :wq and press Enter to save changes and quit.
+		Quit Without Saving: Type :q! and press Enter to quit without saving changes.
+	(16.4) Navigation
+		Move Cursor: Use h, j, k, l to move left, down, up, and right, respectively.
+		Move to Beginning of Line: Press 0.
+		Move to End of Line: Press $.
+		Move to Next Word: Press w.
+		Move to Previous Word: Press b.
+	(16.5) Editing
+		Delete Character: Press x to delete the character under the cursor.
+		Delete Word: Press dw to delete the word under the cursor.
+		Delete Line: Press dd to delete the entire line.
+		Undo: Press u to undo the last change.
+		Redo: Press Ctrl + r to redo the undone change.
+	(16.6) Visual Mode
+		Enter Visual Mode: Press v to enter visual mode and start selecting text.
+		Select Line: Press V to select the entire line.
+		Select Block: Press Ctrl + v to enter visual block mode.
+		Search and Replace
+		Search: Press / followed by the search term and press Enter to search.
+		Next Match: Press n to go to the next match.
+		Previous Match: Press N to go to the previous match.
+		Replace: Type :%s/old/new/g to replace all occurrences of "old" with "new" in the file.
+	
+	(16.7) Split Windows
+		Horizontal Split: Type :split or :sp to split the window horizontally.
+		Vertical Split: Type :vsplit or :vsp to split the window vertically.
+		Switch Between Splits: Press Ctrl + w followed by w to switch between split windows.
+	
+	(16.8) Buffers and Tabs
+		Open New Tab: Type :tabnew followed by the filename to open a new tab.
+		Switch Tabs: Press gt to go to the next tab and gT to go to the previous tab.
+		List Buffers: Type :ls to list all open buffers.
+		Switch Buffers: Type :b followed by the buffer number to switch to that buffer.
+
+17. mount an NFS share on Linux: 
+	(17.1) sudo apt install nfs-common
+	(17.2) sudo mkdir -p /mnt/nfs_share
+	(17.3) Mount the NFS Share :
+		(17.3.1) mount nfs-server-ip:/shared-directory /mnt/nfs_share
+			Example :
+				mount 192.168.1.10:/opt/ktarget/1503 /mnt/nfs_share
+				
+				or
+				
+				mount 192.168.1.10:/opt/ktarget/1503/out /mnt/nfs_share
+
+18. Basic Syntax of awk:
+	(18.1) awk 'pattern { action }' file
+	(18.2) 	Key awk Variables:
+		$0: The entire line.
+		$1, $2, $3, ...: Individual fields or columns (fields are separated by whitespace by default).
+		NR: The line number.
+		NF: The number of fields in the current line.
+
+19. Install iperf3 :
+	(19.1) sudo apt install iperf3
+	(19.2) iperf3 -c 192.168.1.10 -u -b 100M
+
+20. Sqilite install :
+	sudo apt install npm
+	npm install sqlite3
+	npm install sqlite3
+
+	
+	npm install cors
+	
+	npm install express sqlite3 bcryptjs
+
+
+	steps Overview:
+		Set up the SQLite database in your server.
+		Create an API endpoint to handle incoming user data (POST request).
+		Insert the user data into the database.
+		Return a response to the frontend with success or failure information.
+		Frontend (HTML/JS) sends data to the server using a POST request.
+
+	Steps:
+		Create a new API endpoint to retrieve data.
+		Query the database for the stored records.
+		Send the data back to the frontend.
+		
+
+	npm init -y
+	npm install --save-dev webpack webpack-cli
+	npm install express
+
+	npm install express bcryptjs cors sqlite3
+
+
+	
+	TO install higher version :
+		curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
+		sudo apt install nodejs
+		
+	Requesting Checking :
+		curl -X POST http://localhost:3000/api/register -H "Content-Type: application/json" -d '{"email": "test@domain.com", "password": "yourpassword"}'
+		
+		url : http:/localhost/DigitalAssistant/emplogin.html
+			http:/localhost/DigitalAssistant/empregister.html
+			http:/localhost/DigitalAssistant/index.html	
+
+22. To open the folder via terminal command;
+	(22.1) Open the folder 
+		nautilus /path/to/folder
+	(22.2) Open the Folder in the Default File Manager (Generic) :
+		xdg-open /path/to/folder
+
+	
+23. Install postman in linux :
+	sudo apt install snapd
+	sudo snap install postman
+
+24. Strip Url :
+	https://github.com/stripe/stripe-node
+	
+	
+25. Webkit Build :
+	sudo apt-get install ruby
+	sudo apt-get install libgcrypt20-dev
+	sudo apt-get install libgpg-error-dev
+	sudo apt-get install libxml2-dev
+	sudo apt-get install libsqlite3-dev
+	sudo apt-get install libwebp-dev
+	sudo apt-get install libsoup-3.0-dev
+	sudo apt-get install libwpe-*
+
+26. Install keykad :
+	sudo add-apt-repository ppa:kicad/kicad-9.0-releases
+	sudo apt update
+	sudo apt install kicad
+--------------------
+Installing Command 
+--------------------	
+1. To install notepad++;
+	(1.0) URL Reference : https://www.geeksforgeeks.org/how-to-install-notepad-in-ubuntu/
+	(1.1) sudo apt-get install snapd snapd-xdg-open
+	(1.2) sudo snap install notepad-plus-plus
+
+2. To install visual studio code editor :
+	(2.1) URL : https://code.visualstudio.com/download
+	(2.2) Extract the file.
+	(2.3) sudo dpkg -i code_1.96.3-1736454372_amd64.deb
+		
+3. To install Ninja :
+	sudo apt install ninja-build
+
+4. To configure python :
+	1. Install python :
+		()
+	2.
+		python3 Configure :
+			sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 2
+		python2 Configure :
+			sudo update-alternatives --install /usr/bin/python python /usr/bin/python2 1
+
+	To check python2 Version :
+		python2 --version
+	
+	3. sudo update-alternatives --config python
+
+5. To install code editor :
+	(5.1) URL : https://code.visualstudio.com/download
+	(5.2) sudo dpkg -i code_1.96.3-1736454372_amd64.deb
+
+6. To install the tree command :
+	(6.1) sudo apt  install tree
+
+7. To install curl :dmesg | grep -i tty
+
+	(7.1) sudo apt install curl	
+	
+8. Build Essentials S/W :
+	sudo apt-get update
+	sudo apt-get upgrade
+	sudo apt-get install build-essential
+	sudo apt install libssl-dev
+	sudo apt-get install lib32ncurses5 lib32z1
+	sudo apt-get install pkg-config	
+9. To install wine :
+	sudo apt install --install-recommends winehq-stable
+	
+	or
+	sudo dpkg --add-architecture i386
+	sudo apt update
+	sudo apt install --install-recommends winehq-stable
+
+10. Source insight:
+	(10.1) URL : https://www.sourceinsight.com/download/
+	(10.2) sudo apt-get install wine
+	(10.3)
+
+11. Eclips :
+	(11.1) 	sudo apt install snapd
+		sudo snap install --classic eclipse
+	
+12. To install svn :
+	sudo apt install subversion
+
+13. To install minicom :
+	(13.1) sudo apt-get install minicom
+	(13.2) To open the setting :
+		sudo minicom -s
+	(13.3) To install screen :
+		sudo apt install screen
+
+	
+14. To install locate :
+	(14.1) sudo apt install plocate	
+
+15. To install the smb client :
+	(14.1) sudo apt install smbclient
+	
+	Test :
+		smbclient //192.168.0.115/share -U santhosh
+
+16. To instal serial tool :
+	(15.1) URL : https://www.serialtool.com/_en/download.php?v=1737624284
+	(15.2) Face an no such a file or directory;
+		nstall iperf3 on your test PC:
+sudo apt install libxcb-xinerama0
+
+17. To install windows calculator on linux "
+	(17.1) sudo snap install uno-calculator	
+
+18. To install klogg for linux :
+	(18.1) URL :
+		https://github.com/variar/klogg/releases/tag/continuous-linux
+	(18.2) TO run :
+		$ sudo dpkg -i klogg-24.11.0.1685-jammy.deb
+19. To install kdiff3 :
+	sudo apt-get install kdiff3
+	
+	TO configure defulat :
+		Meld :
+			git config --global diff.tool meld
+			git config --global difftool.prompt false
+
+		KDiff3 :
+			git config --global diff.tool kdiff3
+			git config --global difftool.prompt false\
+	
+	(191.2) To open Meld for folder comparison using the terminal;
+		$ meld /path/to/folder1 /path/to/folder2
+
+		$ meld /path/to/file1.txt /path/to/file2.txt
+
+	(19.3) git clone --filter=blob:none --no-checkout <repository-url>
+	
+		https://github.com/santhoshg007/Project.git
+
+20. To compare the file in linux :
+
+	(20.1) Side-by-side comparison:	
+		$ diff -y file1.txt file2.txt
+		
+	(20.1)  Ignore whitespace differences: Use the -b option to ignore changes in the amount of whitespace:
+		$ diff -b file1.txt file2.txt
+	(20.1)  Show only the differences: Use the -u option for a unified format, which will show the differences with context:
+		$ diff -u file1.txt file2.txt
+	(20.1)  Ignore all whitespace: Use the -w option to ignore all whitespace differences:
+		$ diff -w file1.txt file2.txt
+	(20.1)  Suppress common lines: Use the -q option to only display whether the files differ or not, without showing the specific differences:
+		$ diff -q file1.txt file2.txt
+
+Colour Diagnostics :
+	set(CMAKE_COLOR_DIAGNOSTICS ON)
+
+21. To download hex editor :
+	sudo apt-get install wxhexeditor  # For Debian/Ubuntu	
+	sudo apt-get install ghex  # For Debian/Ubuntu
+
+23. Araxis Merge :
+------------------
+	ppxY]XwG:AFzr*P5/:XtrXCh6U:Mq[cAE*n:DyJs+jJA:/JfF9vsk
+
+Working :
+	W3sMU7mL:ABGI*JKN:#UbB*NKH:V7UWANmY:MCJCdWrK:]IjuWWra
+
+24. Source Insight key :
+---------------------
+	SI3US-064629-34992
+	
+25. Install putty :
+--------------------	
+	sudo apt-get install putty
+
+26. Telenet Install :
+------------
+	
+	sudo apt-get install telnet
+	
+------------	
+OpenSource :
+------------
+1. fccf :
+	URL:: https://github.com/p-ranav/fccf
+	Usage : 
+		fccf is a command-line tool that quickly searches through C/C++ source code in a directory based on a search string and prints relevant code snippets that match the query.
+
+2. GTKTerm :
+	(2.1) Meson 
+		$ sudo apt install meson
+
+	(2.2) gtk3 :
+		$ sudo apt-get install libgtk-3-dev
+	(2.3) sudo apt-get install libvte-2.91-dev
+	(2.4) sudo apt-get install libgudev-1.0-dev	
+	(2.5) Build :
+		meson build
+	(2.6) Copy the executable to 'cp ./gtkterm /usr/local/bin/gtkterm' :
+	(2.7) Permision :
+		sudo chmod +x /usr/local/bin/gtkterm
+		sudo chown root:root /usr/local/bin/gtkterm
+
+3. Klog Source :
+	(3.1) https://klogg.filimonov.dev/
+	(3.2) QT6 :
+		$ sudo apt-get install qt6-base-dev qt6-qmake
+	(3.3) QT5 :
+		$ sudo apt-get install qtbase5-dev qtchooser qt5-qmake qtbase5-dev-tools
+	(3.4) Install Boost 1.57 or later using apt: 
+		$ sudo apt-get install libboost-all-dev
+	(3.5) Install Ragel :
+		<ERROR_SNIPPET>
+			CMake Error at ReleaseBuild/_deps/vectorscan-src/CMakeLists.txt:35 (message):
+			  Ragel state machine compiler not found
+		<SOLUTION>
+		$ sudo apt-get install ragel
+	(3.6) Install Qt5LinguistTools :
+		<ERROR_SNIPPET>
+			CMake Error at src/app/CMakeLists.txt:20 (find_package):
+			  By not providing "FindQt5LinguistTools.cmake" in CMAKE_MODULE_PATH this
+			  project has asked CMake to find a package configuration file provided by
+			  "Qt5LinguistTools", but CMake did not find one.
+
+			  Could not find a package configuration file provided by "Qt5LinguistTools"
+			  with any of the following names:
+
+			    Qt5LinguistToolsConfig.cmake
+			    qt5linguisttools-config.cmake
+
+		<SOLUTION>
+		$ sudo apt-get install qt5-qmake qtbase5-dev-tools qt5-linguist-tools
+		
+	()
+		
+3. Gdb-v16.1	
+	(4.1)URL : https://ftp.gnu.org/gnu/gdb/gdb-16.1.tar.xz
+	(4.2)MD5 : 87c47779841e183907ec65db9428aa95
+	(4.3)Compilation Procedure :	
+		(4.3.1) mkdir build &&
+			cd    build &&
+			../configure --prefix=/usr          \
+			     --with-system-readline \
+			      &&
+			make
+		or
+		(4.3.2) Size of gdb 100+ MB
+			mkdir build && cd    build && ../configure --prefix=/opt/sigmastar/arm-buildroot-linux-uclibcgnueabihf-4.9.4-uclibc-1.0.31/usr/ --with-python=/usr/bin/python3 && make
+		(4.3.3)  To reduce the size :
+			export CFLAGS="-Os"
+			export CXXFLAGS="-Os"
+			export LDFLAGS="-s"
+
+			./configure --disable-debug --prefix=/opt/sigmastar/arm-buildroot-linux-uclibcgnueabihf-4.9.4-uclibc-1.0.31/usr/
+			
+		(4.3.3)  To reduce the size : [9MB]
+			 --enable-gold
+			 ./configure --disable-python --prefix=/opt/sigmastar/arm-buildroot-linux-uclibcgnueabihf-4.9.4-uclibc-1.0.31/usr/
+			 
+			 mkdir build && cd build && ../configure --disable-python --disable-sim --disable-stdcxx --disable-tui --disable-werror
+
+
+
+
+
+4. GDB-10.2:
+	(4.1)URL : https://www.linuxfromscratch.org/blfs/view/11.0/general/gdb.html
+	(4.2)MD5 : c044b7146903ec51c9d2337a29aee93b
+	(4.3)Compilation Procedure :
+		(4.3.1) mkdir build &&
+			cd    build &&
+			../configure --prefix=/usr          \
+				     --with-system-readline \
+				     --with-python=/usr/bin/python3 &&
+make
+-----------------------
+Uboot
+-------------------------
+
+The architecture of the Linux kernel source code is organized in a modular and hierarchical way, with different directories and files for various subsystems, platforms, and functionalities. Here’s a breakdown of the general architecture of the Linux kernel source code:
+
+### 1. **Top-Level Directories**
+
+At the top of the kernel source tree, you'll typically see the following directories and files:
+
+- **`arch/`**: This directory contains architecture-specific code. Each supported architecture (e.g., x86, ARM, MIPS) has its own subdirectory here, which includes low-level kernel code for setting up the hardware, managing interrupts, CPU scheduling, etc.
+  - Example: `arch/x86/`, `arch/arm/`, `arch/mips/`, etc.
+
+- **`block/`**: Code related to block devices, including disk I/O, block device drivers, and scheduling of block operations.
+
+- **`crypto/`**: Cryptography-related code, including algorithms for encryption, hashing, and key management.
+
+- **`drivers/`**: Contains device drivers for various hardware devices. It is further subdivided into categories such as:
+  - `drivers/net/`: Network device drivers.
+  - `drivers/usb/`: USB device drivers.
+  - `drivers/gpu/`: Graphics card drivers.
+  - `drivers/char/`: Character devices.
+  - `drivers/block/`: Block device drivers.
+
+- **`fs/`**: Filesystem-related code. It contains the implementation of various filesystems (e.g., ext4, XFS, Btrfs, etc.), as well as file I/O systems and operations.
+  - Example: `fs/ext4/`, `fs/btrfs/`.
+
+- **`include/`**: This directory contains header files, which define the data structures, function prototypes, and macros that are shared across different parts of the kernel code.
+  - Example: `include/linux/`, `include/asm/`, etc.
+
+- **`init/`**: Contains the initialization code for the kernel. This includes the code that runs at boot time, such as setting up kernel threads, initializing subsystems, and starting system services.
+
+- **`ipc/`**: Inter-process communication mechanisms, including message passing, semaphores, and shared memory.
+
+- **`kernel/`**: Contains core kernel code that handles fundamental services such as process management, memory management, system calls, and scheduling.
+  - Example: `kernel/sched.c` (scheduling), `kernel/fork.c` (process creation), `kernel/exit.c` (process termination).
+
+- **`lib/`**: Contains utility functions and algorithms used by various parts of the kernel.
+
+- **`mm/`**: Memory management code, including virtual memory management, page allocation, swap handling, and memory protection.
+  - Example: `mm/mmap.c`, `mm/page_alloc.c`.
+
+- **`net/`**: Networking code, including network protocols (TCP/IP, UDP, etc.), network device handling, and network stack.
+  - Example: `net/core/`, `net/ipv4/`, `net/ipv6/`.
+
+- **`samples/`**: Example programs that demonstrate how to interact with the kernel's internal APIs.
+
+- **`scripts/`**: Contains helper scripts used in kernel compilation and configuration (e.g., for generating configuration files or automating tasks).
+
+- **`security/`**: Security-related code, including access control, SELinux, AppArmor, and other security mechanisms.
+
+- **`sound/`**: Code for handling sound and audio devices, including drivers and sound system configuration.
+
+- **`tools/`**: Tools and utilities that help with kernel debugging, performance analysis, and development.
+
+- **`usr/`**: Contains code for setting up user space, user-space libraries, and supporting tools (used mainly for initial ramdisks (initramfs)).
+
+### 2. **Architecture-Specific Directories (`arch/`)**
+
+The `arch/` directory is key in defining the kernel’s behavior for different hardware platforms. For example, the `x86/` architecture directory contains the setup code for the x86 platform, interrupt handling, and CPU initialization. Similarly, `arm/` will contain ARM-specific code. Each architecture’s code is often divided into the following sections:
+- **Bootstrapping (boot/)**
+- **Kernel initialization (kernel/)**
+- **Processor-specific code (cpu/)**
+- **Interrupts (irq/)**
+- **Architecture-specific headers (include/)**
+
+### 3. **Subsystems and Modules**
+
+- **Kernel Subsystems**: The kernel is made up of many subsystems that interact with each other. These include:
+  - **Scheduler**: Responsible for managing which processes run on which CPU.
+  - **Memory Manager**: Handles memory allocation, paging, virtual memory, and physical memory management.
+  - **Process Manager**: Manages the creation, execution, and termination of processes.
+  - **I/O Subsystem**: Manages communication with devices (e.g., disk I/O, network I/O).
+  - **Networking Subsystem**: Manages networking protocols (e.g., IP, TCP, UDP).
+  - **Security Subsystem**: Implements security policies, such as mandatory access control (e.g., SELinux).
+
+- **Kernel Modules**: The kernel is designed to be modular, meaning it can load or unload components as needed. This allows for support for a wide range of devices without needing to compile them into the core of the kernel. Modules are stored in the `drivers/` directory, and you can use tools like `modprobe` to load or unload them.
+
+### 4. **Makefiles and Configuration**
+
+- **Makefiles**: The kernel uses Makefiles to manage the build process. The top-level Makefile (usually `Makefile` in the root directory) controls the overall build and defines subdirectories to build. The `Kconfig` files define configuration options for building the kernel.
+- **Kconfig Files**: These files allow users to configure which features and drivers should be enabled or disabled during the kernel compilation process (using `make menuconfig`, `make xconfig`, or similar tools).
+
+### 5. **Key Files in the Kernel Source Tree**
+
+- **`Makefile`**: Top-level build instructions.
+- **`Kconfig`**: Configuration files that control kernel feature options.
+- **`Documentation/`**: Contains documentation related to kernel development, features, and usage.
+- **`CMakeLists.txt`**: In some cases (especially in newer kernel versions), CMake may be used in addition to the traditional Make system for building the kernel.
+
+### 6. **Kernel Execution Flow**
+
+Once the kernel is compiled, it begins execution during the boot process. Here’s a basic flow:
+
+1. **Bootloader** loads the kernel into memory.
+2. **Kernel entry point (`start_kernel`)**: The kernel’s main entry point begins the initialization process. This sets up basic hardware and memory management, and it prepares for multi-threading.
+3. **Architecture-specific initialization**: The architecture-specific code in `arch/` takes over, setting up CPU, memory, interrupts, etc.
+4. **Initialization of kernel subsystems**: The kernel's various subsystems (e.g., memory manager, scheduler, I/O) are initialized.
+5. **init process**: The kernel starts the `init` process (usually `/sbin/init`), which continues the system boot process, eventually launching user-space applications and services.
+
+
+Kernel :
+-------
+	drivers/tty/tty_io.c: This file is responsible for handling terminal I/O operations, like reading from and writing to a terminal.
+	drivers/tty/tty_driver.c: This file defines the TTY drivers which manage terminal devices.
+
+
+init=/linuxrc :
+---------------
+In Linux, the `init=/linuxrc` parameter is typically used in the boot process to specify a different initial program (or initialization program) to run instead of the default init process, which is usually `/sbin/init`.
+
+Here’s a breakdown of how it fits into the boot process:
+
+1. **Kernel Initialization**: When the Linux kernel boots, it first loads and initializes hardware, mounts the root filesystem, and performs essential tasks to get the system up and running. The kernel then needs to start a user-space process to complete the boot sequence.
+
+2. **The Default Init Process**: By default, the kernel will try to launch `/sbin/init`, which is typically the first user-space program to run. This program is responsible for starting up all the other user-space programs, such as running system services and user logins.
+
+3. **Specifying a Different Init Program**: The `init=/linuxrc` kernel parameter tells the kernel to use `/linuxrc` instead of the default `/sbin/init`. This is often used in certain scenarios:
+   - **Embedded Systems**: In embedded systems or minimal Linux environments, `/linuxrc` might be a custom script or program designed to perform specific setup tasks before the main system initialization begins.
+   - **Rescue or Recovery**: In some special boot configurations, like a rescue system or a recovery environment, a custom initialization program might be required to prepare the system or run a recovery process.
+   - **Custom Init Programs**: Developers or system administrators might use this option to point to a custom `init` program that handles initialization in a non-standard way.
+
+4. **After /linuxrc Runs**: If `/linuxrc` is specified and executed, it typically performs its duties (such as preparing the environment, mounting filesystems, or running recovery tools) and may eventually execute the default `/sbin/init` or another system process to complete the boot process.
+
+5. **Example Usage**: The `init=/linuxrc` option is passed to the kernel at boot time, typically through the bootloader configuration. For example, when using a bootloader like GRUB, the kernel command line might look like this:
+
+   ```
+   linux /vmlinuz-5.4.0-42-generic root=/dev/sda1 init=/linuxrc
+   ```
+
+   This tells the kernel to use `/linuxrc` instead of `/sbin/init`.
+
+### Typical Use Cases:
+- **Rescue and Recovery**: Some recovery environments might need to run specific initialization steps before the standard system starts.
+- **Minimal or Embedded Systems**: In custom or lightweight Linux systems, `/linuxrc` could be a small program that configures the system before handing control to a minimal `init` process.
+  
+
+
+
+Example of fatload Command:
+
+The syntax is usually like this:
+
+	fatload mmc 0:1 0x80000000 /boot/uImage
+
+	mmc 0:1 specifies that U-Boot should read from the first MMC device (e.g., the first SD card or eMMC device) and partition 1.
+	0x80000000 is the memory address where the file (in this case, uImage) will be loaded.
+	/boot/uImage is the path to the file on the FAT-formatted storage.
+
+Why Does fatload Use MMC?
+	MMC refers to the hardware interface that handles communication between the device and the memory storage (e.g., SD card or eMMC).
+	FAT is a filesystem that is widely supported on SD cards, eMMC, and other removable media, which is why fatload is used to load files from MMC devices formatted with FAT.
+	The file system (FAT) is what makes the files accessible, and fatload is the command that allows U-Boot to interact with that file system on an MMC device to load files into memory.
+	
+	
+	Booting a **Linux-based embedded device** follows a process similar to booting Linux on a traditional system, but with additional considerations for the constraints and customizations that come with embedded hardware. Let’s break down the key stages of the booting process for an embedded Linux device:
+
+### 1. **Power-On (Boot Process Begins)**
+   - The device is powered on, and the **bootloader** is the first software that runs. This is typically a small piece of code stored in non-volatile memory (e.g., flash memory) that initializes the hardware and loads the kernel into memory.
+
+### 2. **Bootloader Initialization**
+   The bootloader is responsible for setting up the environment, initializing hardware components, and loading the Linux kernel into memory. Common bootloaders used in embedded Linux systems include:
+   
+   - **U-Boot** (Universal Bootloader): The most commonly used bootloader in embedded systems. It supports various architectures and has advanced features like network booting, serial console interaction, and filesystem support.
+   - **Barebox**: Another bootloader commonly used in embedded systems, especially in the Linux-based devices.
+
+   When the bootloader runs, it performs these tasks:
+   - **Initialize hardware**: The bootloader initializes essential hardware components (such as memory, serial ports, and I/O devices).
+   - **Load the kernel**: The bootloader typically loads the kernel from storage (e.g., NAND/NOR flash, SD card, or a network server) into RAM.
+   - **Set boot parameters**: The bootloader often passes kernel boot parameters, such as root filesystem location and hardware-specific options, to the kernel.
+
+   ### Example of U-Boot Commands:
+   - Set kernel parameters (like root device):
+     ```bash
+     setenv bootargs console=ttyS0,115200 root=/dev/mmcblk0p2 rw
+     ```
+   - Boot the kernel:
+     ```bash
+     bootm 0x80000000
+     ```
+   This tells U-Boot to boot the kernel from address `0x80000000` in RAM.
+
+### 3. **Loading the Linux Kernel**
+   Once the bootloader loads the kernel image into memory, it hands control over to the kernel. The kernel is the core of the Linux system and will initialize all the hardware, load necessary drivers, and manage system resources.
+
+   - **Decompress the Kernel**: If the kernel image is compressed (e.g., `zImage` or `uImage`), the bootloader will first decompress it into memory.
+   - **Kernel initialization**: The Linux kernel initializes the CPU, memory, device drivers (such as networking, storage, and display), and other low-level hardware components.
+
+   ### Typical steps during kernel boot:
+   - **Setup memory**: The kernel checks and sets up memory management, including virtual memory and paging.
+   - **Setup interrupts**: It configures interrupt controllers for handling hardware interrupts.
+   - **Load drivers**: The kernel loads various drivers for devices like serial ports, network interfaces, and storage devices.
+   - **Mount root filesystem**: The kernel mounts the root filesystem (which is often on a partition or an external storage device like an SD card or NAND flash).
+
+### 4. **Init System**
+   After the kernel has completed its initialization, it executes the `init` process, which is responsible for setting up the user-space environment. In embedded Linux systems, this can be one of several init systems:
+   
+   - **SysVinit**: A traditional init system that works with init scripts to start services.
+   - **Systemd**: A modern and widely used init system in general-purpose Linux distributions (often used in embedded systems with more resources).
+   - **BusyBox Init**: A minimalistic init system used in very resource-constrained embedded systems. BusyBox provides a set of Unix utilities, including `init`.
+
+   The init process starts by executing configuration files or scripts to bring up the system:
+   - **Start system services**: Depending on the init system, it will start services like networking, logging, and device management.
+   - **Mount filesystems**: It mounts additional filesystems (e.g., `/proc`, `/sys`, `/tmp`) needed for system operations.
+   - **Set up users and environments**: It prepares the environment for the user-space applications to run.
+
+### 5. **Root Filesystem (RootFS)**
+   The root filesystem (`/`) holds all essential system files, configuration files, binaries, and libraries. There are different ways to manage the root filesystem in embedded Linux systems:
+   
+   - **Initramfs (Initial RAM Filesystem)**: The root filesystem may be built into the kernel as a compressed archive (`initramfs`), loaded into memory by the bootloader.
+   - **External storage (e.g., NAND, SD card, eMMC)**: The root filesystem may be stored on an external device, and the kernel is instructed to mount it as the root filesystem (e.g., `/dev/mmcblk0p2`).
+
+   The init system is responsible for mounting this root filesystem and making the system ready for user interaction.
+
+### 6. **User Space**
+   After the system is initialized, the device enters the **user space**, where user applications run:
+   
+   - **Login prompt**: The user may be prompted to log in (via serial terminal, console, or other interfaces).
+   - **Start applications**: Depending on the device, user-space applications (such as networking services, web servers, or device control programs) begin to run.
+
+### Embedded Device Booting Example (with U-Boot and Linux Kernel)
+Let’s assume you're working with an embedded device with **U-Boot** as the bootloader and a **Linux kernel**:
+
+1. **Power On**: The device powers on and the U-Boot bootloader is executed.
+2. **U-Boot Bootloader**: 
+   - Initializes basic hardware (memory, UART, etc.).
+   - Loads the kernel image (e.g., `zImage`) from the flash storage into RAM.
+   - Sets kernel parameters (e.g., root filesystem location).
+   - Starts the kernel with a command like `bootm` (booting from the memory address where the kernel was loaded).
+3. **Kernel Initialization**: 
+   - The kernel initializes hardware, mounts the root filesystem, and loads necessary drivers.
+4. **Init Process**: The kernel executes the `init` process, which starts services and user applications.
+5. **User-Space**: The system is fully up and running, ready for user interaction (e.g., through a terminal or GUI interface).
+
+### Boot Time Considerations for Embedded Linux Devices
+- **Boot Time**: Embedded systems often have strict boot time requirements, and minimizing the boot time is a common optimization goal. This can be achieved by:
+  - Reducing the size of the kernel and initramfs.
+  - Using a minimal init system (e.g., BusyBox instead of full systemd).
+  - Optimizing drivers and services to start quickly.
+- **Customizing Boot Process**: Embedded systems often have custom hardware or configurations, so the bootloader and kernel need to be tailored for the specific device.
+
+### Conclusion
+The boot process of an embedded Linux device is essentially similar to a general-purpose Linux system, but with more customization to suit the resource constraints and specialized hardware of the embedded system. The bootloader (like U-Boot) loads the kernel, which initializes the hardware, and then the init system sets up the user space. In embedded systems, everything from the bootloader to the init process is optimized for minimal resource usage and fast boot times.
+
+Let me know if you have any specific questions about booting embedded Linux or need details about a particular step!
+
+-----------------------
+DashCam Information:
+-----------------------
+1. Recording video and audio content;
+2. Get the GPS position posting.
+3. Controlling audio disable cam record.
+4. Get storage space information.
+5. Reset the storage device.
+6. Live stream.
+7. Trip based vide record save.
+8. Jark.
+9. Map the live position toward the A/V.
+10. Flip the back camera.
+11. Snap the video to gallery.
+
+
+1. Upgrading manager.
+2. Event Helper.
+3. CamerEventHelper.
+4. EventManager.
+5. DC Commission.
+6. ConfigurationController.
+7. httpserver.
+8. recordingManager.
+9. startup-> Initilisation and spawn thread.
+10. SystemManager
+11. VolumeController.
+12. wifihelper-> connection of wifi mode.
+13. devicecommom => detection.cpp have 
+14. DB layer.
+15. 
+---------------------------
+Visual Studio Code Block :
+---------------------------
+Here are the shortcut keys for Visual Studio Code (VS Code) block editing in Linux:
+
+Block Editing Shortcuts
+
+1. Select Word: Ctrl + D
+2. Select Line: Ctrl + L
+3. Select Block: Ctrl + Shift + Space
+4. Select All: Ctrl + A
+
+Block Movement and Editing Shortcuts
+
+1. Move Line Up: Alt + Up Arrow
+2. Move Line Down: Alt + Down Arrow
+3. Copy Line: Ctrl + Shift + D
+4. Delete Line: Ctrl + Shift + K
+5. Indent Block: Ctrl + ]
+6. Outdent Block: Ctrl + [
+
+Block Commenting and Formatting Shortcuts
+
+1. Toggle Comment: Ctrl + /
+2. Format Document: Ctrl + Shift + P, then select "Format Document"
+3. Format Selection: Ctrl + K Ctrl + F
+
+Additionally, here are some Linux-specific shortcuts:
+
+Linux-Specific Shortcuts
+
+1. Open File: Ctrl + O
+2. Open Folder: Ctrl + K Ctrl + O
+3. New File: Ctrl + N
+4. New Window: Ctrl + Shift + N
+5. Close Window: Ctrl + Shift + W
+
+For Navigation :
+
+1. Jump to Definition:
+	Linux: Fn + F12
+2. GO forward :
+	alt + right arrow.
+3. GO back :
+	alt + left arrow.
+4. Outline View :
+	Ctrl+Shift+E
+5. Go to Symbol:
+	Ctrl+Shift+O
+			
+----------------
+Copyright quotes :
+--------------------
+/*
+ * Copyright (c) 2025 Your Company Name
+ * All rights reserved.
+ *
+ * This software is confidential and proprietary to Your Company Name.
+ * The use, reproduction, distribution, or disclosure of this software outside
+ * of the company premises is strictly prohibited without prior written consent.
+ *
+ * No part of this software may be copied, modified, or distributed for any
+ * purpose other than as expressly permitted by Your Company Name.
+ *
+ * Author: Your Name
+ * Date: January 17, 2025
+ */
+
+*  Revision History:
+*  -----------------------------------------------------------------------------
+*  Date          		Author               Reason for Change
+*  -----------------------------------------------------------------------------
+
+Hero :
+/*
+ * Copyright (c) 2025 Hero Electronix
+ * All rights reserved.
+ *
+ * This software is confidential and proprietary to Hero Electronix.
+ * The use, reproduction, distribution, or disclosure of this software outside
+ * of the company premises is strictly prohibited without prior written consent.
+ *
+ * No part of this software may be copied, modified, or distributed for any
+ * purpose other than as expressly permitted by Your Company Name.
+ *
+ * Author: Your Name
+ * Date: January 17, 2025
+ */
+ 
+------------------------------------
+DASH CAM 4K Module2 Build Procedure :
+-------------------------------------
+ 1. M/W SDK :
+ 	cmake ./ -G "Unix Makefiles" -Bbuild -DCMAKE_BUILD_TYPE=release -DCMAKE_C_FLAGS_DEBUG="-O0" -DCMAKE_CXX_FLAGS_DEBUG="-O0" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_SYSTEM_NAME=Linux -DARCH_ABI=armeabi-v7a -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=lib -DMAKE_QA_BUILD=ON -DMAKE_GATEWAY_BUILD=ON -DBUILD_LINUX=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCAMERA_BUILD=ON -DPLATFORM=sigmastar -DPRODUCT_TYPE=QUBO_DASHCAM -DGPS_SUPPORT=ON -DSTREAM_TYPE=P2P -DDASHCAM_MODEL=4G
+ 	
+Doubts :
+------
+Commisionning
+ 	
+ 	
+--------------
+GPS Module
+------------
+A GPS (Global Positioning System) module provides various types of information related to the location and movement of a device. Some of the key information that a GPS module typically provides includes:
+
+1. Position Coordinates:
+	Latitude: The north-south position on the Earth’s surface.
+	Longitude: The east-west position on the Earth’s surface.
+	Altitude: The height above or below sea level, also known as elevation.
+
+2. Time Information:
+	UTC (Coordinated Universal Time): The precise time based on atomic clocks, often synchronized across the entire GPS system.
+	Date: The date associated with the UTC time.
+
+3. Velocity:
+	Speed: The current speed at which the GPS module is moving (usually measured in meters per second or kilometers per hour).
+	Course Over Ground (COG): The direction in which the device is moving, relative to true north (measured in degrees).
+
+4. Satellite Data:
+	Number of Satellites in View: Indicates how many satellites the GPS module is currently receiving signals from.
+	Signal Strength: The strength of the signals from each satellite, which affects the accuracy of the position calculation.
+	Satellite ID: Identifies each satellite that the GPS is communicating with.
+
+5. Accuracy:
+	HDOP (Horizontal Dilution of Precision): A measure of the accuracy of the horizontal position (latitude and longitude). Lower HDOP means higher accuracy.
+	VDOP (Vertical Dilution of Precision): A measure of vertical accuracy (altitude).
+	Position Error: The estimated error in the position, which helps assess the reliability of the location data.
+
+6. Fix Type:
+	2D Fix: Position is determined based on latitude and longitude.
+	3D Fix: Position is determined based on latitude, longitude, and altitude (requires signals from at least 4 satellites).
+
+7. GNSS (Global Navigation Satellite System):
+	Some GPS modules can work with other satellite systems besides the U.S. GPS constellation, such as GLONASS (Russia), Galileo (EU), and BeiDou (China). They provide extra data from these additional systems, increasing accuracy.
+
+8. Geodetic Datum:
+	This defines the coordinate system used for measuring position. The most common one is WGS84 (World Geodetic System 1984).
+
+9. Course and Heading:
+	Heading: The direction in which the GPS unit is moving.
+	Course over ground: The path the GPS has traveled, which may differ slightly from heading due to drift. 	
+ 	
+ 
+ --------------------------------
+ Serial Port Setting in kernel & what is termios and usage
+ -------------------------------
+	The termios structure and associated functions are part of the POSIX standard used in Unix-like systems (such as Linux and macOS) to control terminal (or serial) I/O. It provides a way to configure terminal behavior, manage input/output settings, and control serial communication parameters like baud rate, data bits, parity, and flow control.
+
+	The termios API is widely used for serial port communication (RS-232, USB-to-serial adapters, etc.) as well as controlling the behavior of interactive user terminals.
+
+termios Structure
+	The termios structure contains the settings for controlling the behavior of the terminal or serial port. Here's a simplified definition:
+
+	struct termios {
+	    tcflag_t c_iflag;    // Input modes
+	    tcflag_t c_oflag;    // Output modes
+	    tcflag_t c_cflag;    // Control modes
+	    tcflag_t c_lflag;    // Local modes
+	    cc_t c_cc[NCCS];     // Special control characters (e.g., newline, interrupt)
+	    speed_t c_ispeed;    // Input speed (baud rate)
+	    speed_t c_ospeed;    // Output speed (baud rate)
+	};
+
+Important Fields:
+	c_iflag: Input modes. Controls how data is processed during input (e.g., handling parity errors).
+	c_oflag: Output modes. Controls how data is processed during output (e.g., whether output is echoed).
+	c_cflag: Control modes. Defines settings like baud rate, character size, stop bits, and flow control.
+	c_lflag: Local modes. Controls interactive behavior like whether signals (e.g., interrupt or suspend) are enabled.
+	c_cc[]: Control characters like VMIN (minimum characters to read), VTIME (read timeout), etc.
+	c_ispeed / c_ospeed: The input and output baud rate, respectively.
+
+
+Common termios Usage
+
+1. Opening the Serial Port
+	You need to open a serial port (e.g., /dev/ttyS0 on Linux) using the open() system call.
+
+2. Getting Current Settings
+	Use tcgetattr() to retrieve the current settings of the terminal or serial port:
+	struct termios newtio;
+	tcgetattr(fd, &newtio);
+	
+3. Modifying Settings
+	You modify the settings stored in the termios structure (newtio). For example, you can set the baud rate, character size, and enable or disable flow control.
+
+		newtio.c_cflag = B9600 | CS8 | CLOCAL | CREAD;  // Set baud rate to 9600, 8 data bits, and enable reading
+		newtio.c_iflag = IGNPAR;  // Ignore parity errors
+		newtio.c_oflag = 0;  // Set output mode
+		newtio.c_lflag = 0;  // Disable local mode (no canonical input)
+
+4. Applying the Settings
+	After configuring the settings, you can apply them using tcsetattr().
+
+	tcsetattr(fd, TCSANOW, &newtio);
+	
+	The TCSANOW flag means the settings will be applied immediately.
+
+5. Flushing Buffers (Optional)
+	You can flush the input and output buffers using tcflush() to clear any stale data that might be left over in the buffers.
+
+6. Closing the Serial Port
+	Once you're done, close the file descriptor using close().
+
+1. tcflush(_fd, TCIOFLUSH);
+	Purpose: This function flushes the input and output buffers associated with the file descriptor (_fd), which is typically a serial port.
+	
+	Explanation:
+	_fd is the file descriptor representing the open serial port (typically obtained via open()).
+	TCIOFLUSH means that both input and output buffers should be flushed. This ensures that any data in the input or output buffers that hasn't yet been processed is discarded.
+	This function is used to ensure that any unwanted or stale data in the buffers is cleared, making the communication channel clean for further transmission.
+
+2. tcsetattr(_fd, TCSANOW, &newtio);
+	Purpose: This function sets the attributes for the serial port, typically for adjusting settings like baud rate, character size, parity, etc.
+	
+	Explanation:
+	_fd is the file descriptor for the serial port (the same as before).
+	TCSANOW is the action that tells the system to apply the changes immediately. There are other options like TCSADRAIN (apply after all output is sent) and TCSAFLUSH (apply immediately and flush data).
+	&newtio is a pointer to a struct termios, which holds the new terminal settings that you want to apply to the serial port. For example, you might set the baud rate, parity, stop bits, or flow control in this structure.
+
+Example of how it fits into serial port configuration:
+
+	#include <termios.h>
+	#include <unistd.h>
+	#include <fcntl.h>
+	#include <stdio.h>
+
+	int main() {
+	    int _fd = open("/dev/ttyS0", O_RDWR | O_NOCTTY | O_NDELAY);  // Open serial port
+	    if (_fd == -1) {
+		perror("Unable to open serial port");
+		return -1;
+	    }
+
+	    struct termios newtio;
+	    tcgetattr(_fd, &newtio);  // Get current settings
+
+	    // Set new serial port settings (example)
+	    newtio.c_cflag = B9600 | CS8 | CLOCAL | CREAD;  // 9600 baud, 8 data bits, local connection
+	    newtio.c_iflag = IGNPAR;  // Ignore parity errors
+	    newtio.c_oflag = 0;
+	    newtio.c_lflag = 0;
+	    newtio.c_cc[VMIN] = 1;  // Minimum number of characters to read
+	    newtio.c_cc[VTIME] = 0;  // Timeout in deciseconds
+
+	    tcflush(_fd, TCIOFLUSH);  // Flush input/output buffers
+	    tcsetattr(_fd, TCSANOW, &newtio);  // Set the new serial port settings
+
+	    // Now the serial port is configured, and you can read/write data.
+
+	    close(_fd);  // Close the serial port
+	    return 0;
+	}
+
+Other Example GPS init :
+	void setup_serial_port(int baud)
+	{
+	    struct termios newtio;
+
+	    _fd = open(_port, O_RDWR);// | O_NONBLOCK
+
+	    if (_fd < 0) {
+		printf("Error opening serial port \n");
+		return;
+	    }
+
+	    bzero(&newtio, sizeof(newtio)); /* clear struct for new port settings */
+
+	    /* man termios get more info on below settings */
+	    newtio.c_cflag = baud | CS8 | CLOCAL | CREAD;
+
+	    if (_rts_cts) {
+		newtio.c_cflag |= CRTSCTS;
+	    }
+
+	    if (_2_stop_bit) {
+		newtio.c_cflag |= CSTOPB;
+	    }
+
+	    if (_parity) {
+		newtio.c_cflag |= PARENB;
+		if (_odd_parity) {
+		    newtio.c_cflag |= PARODD;
+		}
+		if (_stick_parity) {
+		    newtio.c_cflag |= CMSPAR;
+		}
+	    }
+
+	    newtio.c_iflag = 0;
+	    newtio.c_oflag = 0;
+	    newtio.c_lflag = 0;
+
+	    // block for up till 128 characters
+	    newtio.c_cc[VMIN] = 128;
+
+	    // 0.5 seconds read timeout
+	    newtio.c_cc[VTIME] = 5;
+
+	    /* now clean the modem line and activate the settings for the port */
+	    tcflush(_fd, TCIOFLUSH);
+	    tcsetattr(_fd, TCSANOW, &newtio);
+	}
+
+Key Components:
+
+	termios: A structure used to configure serial port settings.
+	open(): A system call to open a file or device.
+	tcflush(): A system call to flush the input and output buffers of a terminal.
+	tcsetattr(): A system call to set the attributes of a terminal.
+	Baud Rate: The rate at which data is transmitted over the serial port.
+	Parity: An error-checking mechanism.
+	Flow Control: A mechanism to prevent data loss due to buffer overflow.
+	Stop Bits: Bits used to indicate the end of a character.
+	File Descriptor: An integer that represents an open file or device.
+
+--------------------------------------
+Kernel ioctl method implementation :
+--------------------------------------
+In the Linux kernel, struct file_operations is a crucial structure used to define the file operations that can be performed on a device or file. It contains function pointers for operations like opening, reading, writing, closing, and ioctl commands. These operations allow user-space programs to interact with kernel-level devices, files, or resources.
+
+Overview of struct file_operations:
+	The struct file_operations structure is typically used when defining operations for a character device (or other types of devices) within the kernel. Each operation is represented by a function pointer, and when the corresponding action is requested by a user-space process (e.g., calling open() on a device), the corresponding function is executed.
+
+ basic structure of file_operations: 
+ 	>>
+ 	struct file_operations {
+	    struct module *owner;   /* The module owning this structure */
+	    loff_t (*llseek)(struct file *file, loff_t offset, int whence);  /* Seek operation */
+	    ssize_t (*read)(struct file *file, char __user *buf, size_t count, loff_t *pos);  /* Read operation */
+	    ssize_t (*write)(struct file *file, const char __user *buf, size_t count, loff_t *pos);  /* Write operation */
+	    int (*iterate)(struct file *file, struct dir_context *ctx);  /* Directory iteration */
+	    int (*open)(struct inode *inode, struct file *file);  /* Open operation */
+	    int (*flush)(struct file *file, fl_owner_t id);  /* Flush operation */
+	    int (*release)(struct inode *inode, struct file *file);  /* Release operation (close) */
+	    long (*unlocked_ioctl)(struct file *file, unsigned int cmd, unsigned long arg);  /* IOCTL operation */
+	    unsigned int (*poll)(struct file *file, struct poll_table_struct *wait);  /* Polling operation */
+	    int (*mmap)(struct file *file, struct vm_area_struct *vma);  /* Memory mapping operation */
+	    int (*fsync)(struct file *file, loff_t start, loff_t end, int datasync);  /* Synchronize data operation */
+	    ssize_t (*splice_read)(struct file *file, loff_t *off, struct pipe_inode_info *pipe, size_t len, unsigned int flags);  /* Splice read operation */
+	    ssize_t (*splice_write)(struct pipe_inode_info *pipe, struct file *file, loff_t *off, size_t len, unsigned int flags);  /* Splice write operation */
+	    int (*set_fasync)(int fd, struct file *file, int on);  /* Set asynchronous operation */
+	    int (*lock)(struct file *file, int cmd, struct file_lock *fl);  /* File locking operation */
+	    int (*flock)(struct file *file, int cmd);  /* File locking operation */
+	    int (*fsync_range)(struct file *file, loff_t start, loff_t end, int datasync);  /* Sync range operation */
+	    ssize_t (*read_iter)(struct kiocb *iocb, struct iovec *iov, unsigned long nr_segs, loff_t *pos);  /* Read iterator operation */
+	    ssize_t (*write_iter)(struct kiocb *iocb, const struct iovec *iov, unsigned long nr_segs, loff_t *pos);  /* Write iterator operation */
+	    int (*fasync)(int fd, struct file *file, int on);  /* Asynchronous I/O */
+	    unsigned long (*get_unmapped_area)(struct file *file, unsigned long addr, unsigned long len, unsigned long pgoff, unsigned long flags);  /* Get unmapped area for mmap */
+	};
+	
+	<<
+	
+Source Code Example :
+	>>
+		#include <linux/fs.h>
+		#include <linux/module.h>
+		#include <linux/init.h>
+		#include <linux/uaccess.h>  // for copy_to_user
+
+		#define DEVICE_NAME "my_device"
+
+		static int device_open(struct inode *inode, struct file *file) {
+		    printk(KERN_INFO "my_device opened\n");
+		    return 0;
+		}
+
+		static int device_release(struct inode *inode, struct file *file) {
+		    printk(KERN_INFO "my_device closed\n");
+		    return 0;
+		}
+
+		static ssize_t device_read(struct file *file, char __user *buf, size_t count, loff_t *pos) {
+		    const char *msg = "Hello from kernel!";
+		    size_t len = strlen(msg);
+
+		    if (*pos >= len) return 0;
+
+		    if (count > len - *pos)
+			count = len - *pos;
+
+		    if (copy_to_user(buf, msg + *pos, count))
+			return -EFAULT;
+
+		    *pos += count;
+		    return count;
+		}
+
+		static struct file_operations fops = {
+		    .owner = THIS_MODULE,
+		    .open = device_open,
+		    .release = device_release,
+		    .read = device_read,
+		};
+
+		static int __init my_device_init(void) {
+		    int ret;
+
+		    ret = register_chrdev(0, DEVICE_NAME, &fops);
+		    if (ret < 0) {
+			printk(KERN_ERR "Failed to register device\n");
+			return ret;
+		    }
+
+		    printk(KERN_INFO "my_device module loaded\n");
+		    return 0;
+		}
+
+		static void __exit my_device_exit(void) {
+		    unregister_chrdev(0, DEVICE_NAME);
+		    printk(KERN_INFO "my_device module unloaded\n");
+		}
+
+		module_init(my_device_init);
+		module_exit(my_device_exit);
+
+		MODULE_LICENSE("GPL");
+		MODULE_AUTHOR("Author");
+		MODULE_DESCRIPTION("A simple device driver");
+
+	<<
+
+Explanation:
+	fops Structure:
+		 The fops structure is filled with function pointers to implement the operations we want for the device (open, release, read, etc.).
+	register_chrdev: 
+		Registers a character device with the kernel, associating it with the fops structure, allowing user-space applications to interact with the device.
+	device_read: 
+		When a user reads from the device file (e.g., via cat /dev/my_device), this function is invoked to copy data from kernel space to user space.
+		
+		
+--------------
+struct miscdevice
+----------------------
+	In the Linux kernel, a miscdevice is a type of device that is registered with a "miscellaneous" device driver. It is a simplified way of registering devices that don't require a full-fledged device driver and typically have a small number of file operations, such as open, close, read, and write.
+
+	The struct miscdevice is used to describe the attributes of a miscellaneous device in the kernel, including the device name, minor number, and associated file operations.
+
+struct miscdevice Overview:
+	struct miscdevice {
+	    int minor;                     /* Minor number of the device */
+	    const char *name;               /* Device name */
+	    struct file_operations *fops;   /* File operations for the device */
+	    struct device *dev;             /* Device structure (optional) */
+	};
+	
+Key Fields:
+	minor: The minor number for the device. This is an integer that uniquely identifies the device within the device driver.
+
+	name: A string representing the name of the device (e.g., "gsensor" for a device named gsensor).
+
+	fops: A pointer to the file operations (struct file_operations) for this device. This field points to a set of function pointers that define how the device handles operations like opening, reading, writing, and ioctl commands.
+
+	dev: An optional pointer to the struct device for this device. If you need to associate the device with a specific device model (for example, in /sys/class), this field can be use	
+	
+Example Code :
+	>>
+		#include <linux/module.h>
+		#include <linux/kernel.h>
+		#include <linux/init.h>
+		#include <linux/fs.h>
+		#include <linux/miscdevice.h>
+		#include <linux/uaccess.h>  // for copy_to_user, copy_from_user
+
+		#define DEVICE_NAME "gsensor"
+
+		static ssize_t gsensor_read(struct file *file, char __user *buf, size_t count, loff_t *pos) {
+		    const char *msg = "GSensor data\n";
+		    size_t len = strlen(msg);
+
+		    if (*pos >= len) return 0;
+
+		    if (count > len - *pos)
+			count = len - *pos;
+
+		    if (copy_to_user(buf, msg + *pos, count))
+			return -EFAULT;
+
+		    *pos += count;
+		    return count;
+		}
+
+		static int gsensor_open(struct inode *inode, struct file *file) {
+		    printk(KERN_INFO "GSensor device opened\n");
+		    return 0;
+		}
+
+		static int gsensor_release(struct inode *inode, struct file *file) {
+		    printk(KERN_INFO "GSensor device closed\n");
+		    return 0;
+		}
+
+		// Define the file operations
+		static const struct file_operations gsensor_fops = {
+		    .owner = THIS_MODULE,
+		    .open = gsensor_open,
+		    .release = gsensor_release,
+		    .read = gsensor_read,
+		};
+
+		// Define the miscdevice structure
+		static struct miscdevice gsensor_dev = {
+		    .minor = MISC_DYNAMIC_MINOR,  // Let the kernel assign a dynamic minor number
+		    .name = DEVICE_NAME,          // Device name
+		    .fops = &gsensor_fops,        // File operations for the device
+		};
+
+		static int __init gsensor_init(void) {
+		    int ret;
+
+		    // Register the misc device
+		    ret = misc_register(&gsensor_dev);
+		    if (ret) {
+			printk(KERN_ERR "Unable to register gsensor device\n");
+			return ret;
+		    }
+
+		    printk(KERN_INFO "GSensor device registered\n");
+		    return 0;
+		}
+
+		static void __exit gsensor_exit(void) {
+		    // Deregister the misc device
+		    misc_deregister(&gsensor_dev);
+		    printk(KERN_INFO "GSensor device unregistered\n");
+		}
+
+		module_init(gsensor_init);
+		module_exit(gsensor_exit);
+
+		MODULE_LICENSE("GPL");
+		MODULE_AUTHOR("Your Name");
+		MODULE_DESCRIPTION("A simple GSensor driver");
+
+	<<
+
+Explanation:
+	File Operations (gsensor_fops): 
+		(*) We define a set of file operations (gsensor_fops) for the gsensor device. These operations include the open, release, and read functions.
+
+	Misc Device Registration:
+		(*) gsensor_dev is an instance of struct miscdevice. It holds the necessary information about the device, such as the device's name, file operations, and minor number.
+		(*) We use MISC_DYNAMIC_MINOR for the minor number, meaning that the kernel will dynamically assign a minor number to this device. This is a common practice for miscellaneous devices to avoid conflicts with fixed minor numbers.
+		
+	Device Initialization and Exit:
+		(*) In gsensor_init, we register the gsensor_dev using misc_register().
+		(*) In gsensor_exit, we deregister the device with misc_deregister().
+	Device Name: 
+		(*) The device name ("gsensor") is used to identify the device in /dev. After loading the module, the device will be accessible as /dev/gsensor.
+		
+
+1. module_init(gsensor_init):
+	This macro tells the kernel to call the gsensor_init() function when the module is loaded into the kernel. The function gsensor_init() is where you place your initialization code, such as registering devices, allocating resources, or performing any setup needed for your module to function correctly.
+
+	What it does: 
+		This macro sets up the entry point of the kernel module when it is loaded. In this case, gsensor_init will be the first function called when the module is inserted into the kernel.
+	Where it's used: 
+		This is used at the top of the module source code to register the initialization function that should be executed when the module is loaded using insmod or modprobe.
+	Example:
+	static int __init gsensor_init(void) {
+	    // Your initialization code here
+	    printk(KERN_INFO "GSensor driver initialized\n");
+	    return 0;
+	}
+	
+2. module_exit(gsensor_exit):
+	This macro tells the kernel to call the gsensor_exit() function when the module is removed from the kernel. The gsensor_exit() function is responsible for cleaning up any resources or unregistering any devices that were registered during initialization.
+
+	What it does: 
+		This macro registers the cleanup function that will be invoked when the module is unloaded using rmmod.
+	Where it's used: 
+		This is used to set the exit point of the module, so that when the module is unloaded, the kernel knows which function to call to clean up the resources.
+	Example:
+	static void __exit gsensor_exit(void) {
+	    // Cleanup code here, like unregistering devices, freeing memory, etc.
+	    printk(KERN_INFO "GSensor driver exited\n");
+	}
+3. MODULE_LICENSE("GPL"):
+	This macro specifies the license under which your kernel module is distributed. In this case, "GPL" stands for the GNU General Public License.
+
+	What it does: 
+		This tells the kernel and userspace tools (like modinfo) that the module is licensed under the GPL. This has important implications for things like:
+	Allowing others to modify, distribute, or use the code.
+		If you don't specify a license, the kernel will assume the module is licensed under a proprietary license, and as a result, certain kernel functionalities, such as using the kallsyms feature to access kernel symbols, may be restricted.
+		
+4. MODULE_AUTHOR("Your Name"):
+	This macro specifies the author of the module. It's used to annotate your module with the name of the developer or contributor.
+
+	What it does: 
+		This sets the Author field in the module information that can be viewed using modinfo <module_name>.
+	Where it's used: 
+		This is mainly for documentation and keeping track of who developed or contributed to the module.
+	Example:
+
+		MODULE_AUTHOR("John Doe");
+
+5. MODULE_DESCRIPTION("A simple GSensor driver"):
+	This macro provides a brief description of the kernel module.
+
+	What it does: 
+		It gives a short description of what the module does. This description will appear when you run modinfo on the module and is useful for anyone who is inspecting the module (either developers or users).
+	Where it's used: 
+		This is used for providing metadata about the module, making it easier to understand the module's purpose without looking at the code.
+	Example:
+
+	MODULE_DESCRIPTION("A simple driver for a GSensor device");
+				
+-----------------------
+what is pollfd and usage
+------------------------
+In the context of programming and system-level operations, *poll* and *thread* serve entirely different purposes:
+
+### 1. **Poll**
+- **Definition**: `poll()` is a system call in operating systems used for multiplexing I/O operations. It allows a program to monitor multiple file descriptors (such as sockets, pipes, etc.) to see if any of them are ready for reading, writing, or have errors.
+- **Purpose**: It’s useful in I/O-bound programs where you need to handle multiple inputs/outputs without blocking the program.
+- **Behavior**: It's event-driven. `poll` waits for specified events on file descriptors, returning once the event happens or a timeout occurs.
+- **Example Use Case**: Server handling multiple client connections without using threads for each client.
+
+### 2. **Thread**
+- **Definition**: A thread is the smallest unit of execution within a process. Threads run in parallel within the same process, sharing memory and resources.
+- **Purpose**: Threads enable concurrency within a program, helping to perform tasks simultaneously, such as running a UI and background operations at the same time.
+- **Behavior**: Threads run independently, and their execution can overlap, depending on scheduling.
+- **Example Use Case**: A chat application where one thread handles message sending, and another handles receiving.
+
+### Key Differences
+| **Aspect**         | **Poll**                                   | **Thread**                                |
+|---------------------|-------------------------------------------|-------------------------------------------|
+| **Focus**          | Monitors I/O events on file descriptors   | Allows parallel execution of tasks        |
+| **Concurrency Type**| Event-driven                             | Multi-threaded                            |
+| **Use Case**        | Handling multiple I/O connections         | Parallelizing computations or operations  |
+| **Complexity**      | Simpler but limited to I/O multiplexing   | More complex due to thread management     |
+
+
+In simpler terms:
+
+Threads: Imagine multiple workers in a factory working on different parts of the same product at the same time.
+Polling: Imagine a security guard walking around and repeatedly checking if all the doors are locked.
+
+
+GPS Data Parsing :
+------------------
+	while (g_gpsThread_exit == FALSE) 
+	{
+
+		int retval = poll(&serial_poll, 1, 1000);
+
+		if (retval == -1) 
+		{
+
+			printf("poll error.\n");
+
+			continue;
+		}
+
+		else if (retval) 
+		{
+
+
+			char rb[1024];
+
+			int c = read(_fd, rb, sizeof(rb));
+
+
+			if (c > 0) {
+
+			//printf("Buffer %s\n",rb);
+
+			nmea_parse(&parser, rb, c, &info);
+
+			nmea_info2pos(&info, &dpos);
+
+		}		
+
+	} 
+
+An NMEA parser is a software component that interprets data from devices that use the NMEA 0183 standard. This standard is very common in GPS (Global Positioning System) and other marine electronics. Here's a breakdown:
+
+**What is NMEA 0183?**
+
+* NMEA 0183 is a specification that defines how electronic devices communicate with each other.
+* It's primarily used in marine navigation, but also widely adopted by GPS receivers and other positioning systems.
+* Data is transmitted in the form of "sentences," which are strings of ASCII characters.
+
+**What does an NMEA parser do?**
+
+* **Decodes NMEA sentences:**
+    * It takes the raw NMEA data (the strings of characters) and breaks it down into meaningful information.
+    * For example, it can extract latitude, longitude, altitude, time, and other data from a GPS receiver's output.
+* **Extracts relevant information:**
+    * Different NMEA sentences contain different types of data. The parser identifies the type of sentence and extracts the specific values that are needed.
+* **Provides structured data:**
+    * Instead of dealing with raw strings, the parser provides the data in a structured format that can be easily used by other software.
+
+**Why are NMEA parsers necessary?**
+
+* NMEA data is in a specific format that is not easily human-readable.
+* Parsers make it possible for computers and other devices to understand and use the data from GPS receivers and other NMEA-compatible devices.
+
+**Common NMEA sentences:**
+
+* **$GPGGA:** Provides GPS fix data, including latitude, longitude, altitude, and time.
+* **$GPRMC:** Provides recommended minimum specific GPS/Transit data.
+* **$GPGSV:** Provides GPS satellites in view.
+
+In essence, an NMEA parser acts as a translator, converting the raw data from a GPS or other device into a format that can be used by applications.
+
+-----------------------
+MD5 Usage :
+------------------------
+The functions MD5_Init(), MD5_Update(), and MD5_Final() are part of the MD5 hashing algorithm, typically used to compute the MD5 hash of data. These functions are commonly found in libraries like OpenSSL. Here's a breakdown of how they work and how to use them:
+
+MD5_Init()
+	Initializes an MD5 context. This function should be called first, and it prepares the context to hold the intermediate states of the hash computation.
+
+MD5_Update()
+	This function updates the MD5 hash with a chunk of data. You can call this multiple times if you need to process large data in chunks.
+
+MD5_Final()
+	This function finalizes the MD5 hash computation and produces the final hash result. Once this is called, the hash is completed, and you can retrieve the resulting MD5 value.
+	
+	>>
+		#include <stdio.h>
+		#include <string.h>
+		#include <openssl/md5.h>
+
+		int main() {
+		    // Input data to hash
+		    unsigned char data[] = "Hello, World!";
+		    
+		    // MD5 context
+		    MD5_CTX md5_ctx;
+		    
+		    // Output hash (16 bytes for MD5)
+		    unsigned char hash[MD5_DIGEST_LENGTH];
+
+		    // Step 1: Initialize the MD5 context
+		    MD5_Init(&md5_ctx);
+
+		    // Step 2: Update the hash with data
+		    MD5_Update(&md5_ctx, data, strlen((char*)data));
+
+		    // Step 3: Finalize the hash and store the result
+		    MD5_Final(hash, &md5_ctx);
+
+		    // Print the resulting MD5 hash in hexadecimal
+		    printf("MD5 Hash: ");
+		    for(int i = 0; i < MD5_DIGEST_LENGTH; i++) {
+			printf("%02x", hash[i]);
+		    }
+		    printf("\n");
+
+		    return 0;
+		}
+
+	<<
+
+=================
+Device Tree Source
+===================
+In the context of kernel source, a DTS file stands for Device Tree Source.
+
+Explanation:
+Device Tree: It is a data structure used to describe the hardware components of a system (especially in embedded systems). It is used primarily in Linux and other operating systems to allow the kernel to know about the hardware devices without having to hardcode them into the kernel itself.
+
+DTS File: This is a text file that contains the Device Tree Source in a human-readable format. The .dts file contains the description of the system’s hardware, such as the CPU, memory, peripherals, buses, etc.
+
+How it works:
+The DTS file is compiled into a Device Tree Blob (.dtb) file using the dtc (Device Tree Compiler).
+The compiled .dtb file is then passed to the Linux kernel during boot. The kernel uses this information to configure and manage hardware devices.
+Example:
+A DTS file might describe how the system is structured, for example:
+
+dts
+Copy
+/dts-v1/;
+ 
+/ {
+    model = "Example Board";
+    compatible = "example,board";
+ 
+    memory {
+        reg = <0x80000000 0x10000000>;
+    };
+ 
+    cpu {
+        compatible = "arm,cortex-a53";
+        reg = <0>;
+    };
+};
+In this example, the file specifies memory and CPU properties.
+
+Key Points:
+Device Tree: Describes hardware configuration.
+.dts: Human-readable source file describing the hardware.
+.dtb: Binary format used by the kernel at runtime.
+So in kernel development, a DTS file is an essential part of specifying the hardware architecture and ensuring that the operating system kernel can interact with the system's devices correctly.
+
+
+
+
+=========================
+Busybox executable add :
+=========================
+1. iperf3 :
+	(1.1) git clone https://github.com/esnet/iperf.git
+	(1.2) Set the toolchain :
+		<<
+		export PATH=$PATH:/opt/sigmastar/arm-buildroot-linux-uclibcgnueabihf-4.9.4-uclibc-1.0.31/bin
+		export CROSS_COMPILE="arm-buildroot-linux-uclibcgnueabihf-"
+		export LD_LIBRARY_PATH=/opt/sigmastar/arm-buildroot-linux-uclibcgnueabihf-4.9.4-uclibc-1.0.31/lib/
+
+
+		export CC=/opt/sigmastar/arm-buildroot-linux-uclibcgnueabihf-4.9.4-uclibc-1.0.31/bin/arm-buildroot-linux-uclibcgnueabihf-gcc
+		export CXX=/opt/sigmastar/arm-buildroot-linux-uclibcgnueabihf-4.9.4-uclibc-1.0.31/bin/arm-buildroot-linux-uclibcgnueabihf-g++
+		export AR=/opt/sigmastar/arm-buildroot-linux-uclibcgnueabihf-4.9.4-uclibc-1.0.31/bin/arm-buildroot-linux-uclibcgnueabihf-ar
+		export AS=/opt/sigmastar/arm-buildroot-linux-uclibcgnueabihf-4.9.4-uclibc-1.0.31/bin/arm-buildroot-linux-uclibcgnueabihf-as
+		export LD=/opt/sigmastar/arm-buildroot-linux-uclibcgnueabihf-4.9.4-uclibc-1.0.31/bin/arm-buildroot-linux-uclibcgnueabihf-ld
+		export STRIP=/opt/sigmastar/arm-buildroot-linux-uclibcgnueabihf-4.9.4-uclibc-1.0.31/bin/arm-buildroot-linux-uclibcgnueabihf-strip
+		>>
+
+	(1.3) 	[Share_Library]
+		./configure --host="arm-buildroot-linux-uclibcgnueabihf"
+		[Static_library]
+		./configure --host="arm-buildroot-linux-uclibcgnueabihf" --enable-static --disable-shared
+	(1.4) make
+	(1.5) mv ./src/.libs ./libs
+	(1.6) copy the library to busybox tar folder : 
+		(1.6.1) cd project
+		(1.6.2) tar -xvf busybox-1.20.2-arm-buildroot-linux-uclibcgnueabihf-uclibc-4.9.4-static
+		(1.6.3) cp -f ./libs/libiperf.so ~/project/image/busybox/busybox-1.20.2-arm-buildroot-linux-uclibcgnueabihf-uclibc-4.9.4-static/usr/bin
+		(1.6.4) cp -f ./libs/libiperf.so.0 ~/project/image/busybox/busybox-1.20.2-arm-buildroot-linux-uclibcgnueabihf-uclibc-4.9.4-static/usr/bin
+		(1.6.5) cp -f ./libs/libiperf.so.0.0.0 ~/project/image/busybox/busybox-1.20.2-arm-buildroot-linux-uclibcgnueabihf-uclibc-4.9.4-static/usr/bin
+		(1.6.6) cp -f ./libs/iperf3 ~/project/image/busybox/busybox-1.20.2-arm-buildroot-linux-uclibcgnueabihf-uclibc-4.9.4-static/usr/bin
+	(1.7) [SHARED_LIBRARY_BUILD] export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/bin	
+	
+
+------------------------
+Module implemenation :
+-------------------------
+	In the context of Linux kernel programming, copy_to_user() is a function used to copy data from the kernel space to user space. This is a critical operation in system calls and device drivers, where kernel code needs to return data to user-space programs, but direct memory access between user space and kernel space is restricted for security and stability reasons.
+
+Function Prototype
+	#include <linux/uaccess.h>
+
+	long copy_to_user(void __user *to, const void *from, unsigned long len);
+
+Parameters:
+to:
+	 A pointer to the destination in user space where data will be copied.
+from:
+	 A pointer to the source in kernel space from which data will be copied.
+len:
+	 The number of bytes to copy.
+Return Value:
+	The function returns the number of bytes not copied (i.e., the difference between the requested length and the number of bytes actually copied).
+	If all len bytes are successfully copied, the return value is 0.
+	If the function fails, it will return a non-zero value, indicating how many bytes were not copied.
+	
+Important Considerations:
+	User space vs. kernel space: User space memory is isolated from kernel space for security reasons, so you cannot directly access user space from kernel code. Functions like copy_to_user() and copy_from_user() (for copying data from user space to kernel space) are used to facilitate communication between these spaces.
+	Error checking: Always check the return value of copy_to_user() to ensure that the copy was successful.
+
+Example Usage
+Here’s a simple example where copy_to_user() is used in a kernel module. In this case, it is part of a system call or device driver that returns some data to the user:
+
+c
+Copy
+#include <linux/kernel.h>
+#include <linux/module.h>
+#include <linux/fs.h>
+#include <linux/uaccess.h>  // for copy_to_user()
+
+#define DEVICE_NAME "my_device"
+
+static int device_open(struct inode *inode, struct file *file)
+{
+    pr_info("Device opened\n");
+    return 0;
+}
+
+static ssize_t device_read(struct file *file, char __user *buffer, size_t len, loff_t *offset)
+{
+    char data[] = "Hello, User!";  // Kernel space data to send to user space
+    size_t data_len = sizeof(data);
+
+    // Check if the requested read length is within bounds
+    if (len < data_len)
+        return -EINVAL;
+
+    // Copy data from kernel space to user space
+    if (copy_to_user(buffer, data, data_len)) {
+        pr_err("Failed to copy data to user space\n");
+        return -EFAULT;
+    }
+
+    return data_len;  // Return the number of bytes read
+}
+
+static struct file_operations fops = {
+    .open = device_open,
+    .read = device_read,
+};
+
+static int __init my_device_init(void)
+{
+    int result;
+
+    // Register the device (simplified for example)
+    result = register_chrdev(0, DEVICE_NAME, &fops);
+    if (result < 0) {
+        pr_err("Failed to register device\n");
+        return result;
+    }
+
+    pr_info("Device registered with major number %d\n", result);
+    return 0;
+}
+
+static void __exit my_device_exit(void)
+{
+    pr_info("Device unregistered\n");
+    unregister_chrdev(0, DEVICE_NAME);
+}
+
+module_init(my_device_init);
+module_exit(my_device_exit);
+
+MODULE_LICENSE("GPL");
+MODULE_AUTHOR("Your Name");
+MODULE_DESCRIPTION("A simple Linux driver that uses copy_to_user");
+Explanation:
+In the device_read() function, the kernel space data ("Hello, User!") is copied to the user space buffer buffer using copy_to_user().
+If the copy is successful, the function returns the number of bytes read (i.e., data_len). If the copy fails, it returns -EFAULT.
+Common Issues:
+Invalid memory access: If the user-space address (to) is not accessible (e.g., if it’s NULL or outside the bounds of valid user space), copy_to_user() will return a non-zero value.
+Security concerns: Accessing user space incorrectly can lead to security vulnerabilities, so always ensure proper bounds checking and error handling.
+Summary:
+copy_to_user() is used to copy data from kernel space to user space in a safe manner.
+Always check the return value to ensure the copy was successful.
+Handle errors carefully to prevent crashes or security issues.
+
+
+--------------
+proc_create
+---------------
+The `proc_create()` function in the Linux kernel is used to create entries in the `/proc` filesystem. Here's an overview of its usage and how it works:
+
+### Syntax
+```c
+struct proc_dir_entry *proc_create(const char *name, umode_t mode, struct proc_dir_entry *parent, const struct file_operations *fops);
+```
+
+### Parameters
+1. **`name`**:  
+   - The name of the proc entry to be created (e.g., "my_proc_file").
+
+2. **`mode`**:  
+   - The permissions for the proc file (e.g., `0444` for read-only or `0644` for read-write).
+
+3. **`parent`**:  
+   - The parent directory under which the proc entry is created. Passing `NULL` will place the entry directly under `/proc`.
+
+4. **`fops`**:  
+   - A pointer to a `struct file_operations` defining how the proc file behaves (e.g., how to handle read/write operations).
+
+### Returns
+- On success, `proc_create()` returns a pointer to the newly created proc directory entry (`struct proc_dir_entry`).
+- On failure, it returns `NULL`.
+
+### Example
+Below is a simple example demonstrating the use of `proc_create()`:
+
+```c
+#include <linux/proc_fs.h>
+#include <linux/module.h>
+#include <linux/kernel.h>
+#include <linux/uaccess.h>
+
+#define PROC_NAME "my_proc_file"
+
+static struct proc_dir_entry *proc_entry;
+static char proc_buffer[1024];
+
+ssize_t proc_read(struct file *file, char __user *buffer, size_t count, loff_t *pos) {
+    return simple_read_from_buffer(buffer, count, pos, proc_buffer, strlen(proc_buffer));
+}
+
+ssize_t proc_write(struct file *file, const char __user *buffer, size_t count, loff_t *pos) {
+    return simple_write_to_buffer(proc_buffer, sizeof(proc_buffer), pos, buffer, count);
+}
+
+static const struct file_operations proc_fops = {
+    .owner = THIS_MODULE,
+    .read = proc_read,
+    .write = proc_write,
+};
+
+static int __init proc_init(void) {
+    proc_entry = proc_create(PROC_NAME, 0644, NULL, &proc_fops);
+    if (!proc_entry) {
+        pr_err("Failed to create /proc/%s\n", PROC_NAME);
+        return -ENOMEM;
+    }
+    pr_info("/proc/%s created\n", PROC_NAME);
+    return 0;
+}
+
+static void __exit proc_exit(void) {
+    remove_proc_entry(PROC_NAME, NULL);
+    pr_info("/proc/%s removed\n", PROC_NAME);
+}
+
+module_init(proc_init);
+module_exit(proc_exit);
+
+MODULE_LICENSE("GPL");
+MODULE_DESCRIPTION("Example of proc_create usage");
+MODULE_AUTHOR("Your Name");
+```
+
+### Key Notes
+1. **Reading and Writing**:
+   - `proc_read` and `proc_write` handle reading from and writing to the proc file, using helpers like `simple_read_from_buffer` and `simple_write_to_buffer`.
+
+2. **Cleanup**:
+   - Always remove the proc entry during module cleanup using `remove_proc_entry()` to avoid dangling entries.
+
+3. **Permissions**:
+   - Set appropriate permissions (`mode`) depending on whether the proc file should be read-only, write-only, or read/write.
+
+4. **Error Handling**:
+   - Properly check the return value of `proc_create()` to ensure the proc file was created successfully.
+
+This should give you a clear idea of how to use `proc_create()`. Let me know if you'd like more details on any part!
+
+
+
+------------
+Proc Working
+-------------
+The speed and efficiency of file operations between the kernel and user space are thanks to the careful design of the Linux kernel, which facilitates seamless communication and file access. Here's a breakdown of how this interaction works:
+
+### 1. **How User-Space Accesses Kernel Files**
+- When you open or interact with a proc file from user space (e.g., using `cat`, `echo`, or an application), the **Virtual File System (VFS)** in the kernel intercepts the call.
+- The proc file is a **pseudo-file** (not a physical file on disk) that exists in the `/proc` filesystem. Operations like `open()`, `read()`, `write()`, and `close()` are redirected to the kernel via hooks defined in the `struct file_operations` in your module.
+- For example, if a user reads data from `/proc/<file>`, the VFS invokes the `read` function defined in the `file_operations` structure in your code.
+
+### 2. **Efficiency of Proc Files**
+- Proc files are **lightweight** because they don’t reside on disk; they exist purely in memory. This eliminates disk I/O delays and allows very fast interactions.
+- The kernel directly populates data on-the-fly when the user-space application performs a read operation. For example:
+  - The `read` handler in your module prepares the data (like G-Sensor data) and sends it to the user.
+  - This avoids any need to store the data beforehand.
+
+### 3. **How File Operations Work Internally**
+- **In User Space**:
+  - When a program calls `open()` on `/proc/<file>`, the VFS maps this request to the kernel module's `proc_create`-registered handlers.
+  - The `read()` system call in user space translates to the `read` handler in the kernel, which may use `copy_to_user()` to pass data back to the user space safely.
+
+- **In Kernel Space**:
+  - When user-space calls interact with the proc file, the kernel executes your module’s `file_operations` functions (`read`, `write`, etc.) directly. For example:
+    - **`read()`**: Fetches real-time data (like G-Sensor values) and sends it to user space.
+    - **`write()`**: Accepts commands or configuration data from user space and modifies kernel module behavior accordingly.
+
+### 4. **Why It’s Fast**
+- **Zero Disk I/O**: Since proc files are purely in-memory constructs, operations bypass the traditional overhead of disk access.
+- **Kernel Direct Execution**: When a user-space request reaches the kernel (via system calls), the kernel directly invokes the handler functions in your module.
+- **Optimized Context Switching**: The Linux kernel minimizes the performance impact of switching between user and kernel space.
+- **Streamlined Communication**: The VFS abstracts the complexity of interfacing with the `/proc` filesystem, making interactions straightforward and efficient.
+
+### 5. **Behind the Scenes (System Calls)**
+- **System Call Path**:
+  1. User-space program calls `open("/proc/<file>")`, triggering a system call.
+  2. The kernel processes this system call and passes it to the proc file's registered handlers (e.g., the `read` or `write` function in your module).
+  3. The corresponding handler performs the operation and sends the data back to the user space.
+  4. Finally, the user-space program receives the data or confirmation of the operation.
+
+### Example Flow:
+If you were monitoring the G-Sensor:
+1. A user reads from `/proc/gsensor` using `cat /proc/gsensor`.
+2. The kernel executes your module's `read` function.
+3. The `read` function retrieves the G-Sensor's current data (e.g., acceleration values).
+4. The data is copied to user space using `copy_to_user()`, and the user sees the output instantly.
+
+---------
+
+
+Here's an example demonstrating user-space interaction with a kernel module that reads data from a G-Sensor to register collisions. The kernel module simulates collision detection and shares the data with a user-space program through a proc file.
+
+### **Kernel Space Code**:
+The kernel module creates a proc file to provide sensor data to user space.
+
+```c
+#include <linux/proc_fs.h>
+#include <linux/module.h>
+#include <linux/kernel.h>
+#include <linux/uaccess.h>
+
+#define PROC_GSENSOR "gsensor_collision"
+
+static char collision_data[256] = "No collision detected";
+static struct proc_dir_entry *proc_gsensor_entry;
+
+/* Simulated G-Sensor collision detection */
+void detect_collision(void) {
+    // Simulate reading data from the G-Sensor device
+    // If collision detected, update collision_data
+    int simulated_collision = 1; // Simulate collision for demo
+    if (simulated_collision) {
+        snprintf(collision_data, sizeof(collision_data), "Collision detected: Force=5.6g");
+    }
+}
+
+/* Handler for reading from the proc file */
+static ssize_t gsensor_read(struct file *file, char __user *buffer, size_t count, loff_t *pos) {
+    detect_collision();
+    return simple_read_from_buffer(buffer, count, pos, collision_data, strlen(collision_data));
+}
+
+/* File operations structure */
+static const struct file_operations gsensor_fops = {
+    .read = gsensor_read,
+};
+
+/* Initialize the proc file */
+static int __init gsensor_init(void) {
+    proc_gsensor_entry = proc_create(PROC_GSENSOR, 0444, NULL, &gsensor_fops);
+    if (!proc_gsensor_entry) {
+        pr_err("Failed to create proc file %s\n", PROC_GSENSOR);
+        return -ENOMEM;
+    }
+    pr_info("/proc/%s created\n", PROC_GSENSOR);
+    return 0;
+}
+
+/* Cleanup the proc file */
+static void __exit gsensor_exit(void) {
+    remove_proc_entry(PROC_GSENSOR, NULL);
+    pr_info("/proc/%s removed\n", PROC_GSENSOR);
+}
+
+module_init(gsensor_init);
+module_exit(gsensor_exit);
+
+MODULE_LICENSE("GPL");
+MODULE_DESCRIPTION("G-Sensor collision detection module");
+MODULE_AUTHOR("Your Name");
+```
+
+### **User-Space Program**:
+This program reads collision data from the `/proc/gsensor_collision` file created by the kernel module.
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+#define PROC_FILE "/proc/gsensor_collision"
+
+int main() {
+    char buffer[256];
+    FILE *file;
+
+    file = fopen(PROC_FILE, "r");
+    if (!file) {
+        perror("Error opening proc file");
+        return EXIT_FAILURE;
+    }
+
+    while (1) {
+        fseek(file, 0, SEEK_SET); // Reset file pointer for continuous reading
+        fread(buffer, sizeof(char), sizeof(buffer) - 1, file);
+        buffer[255] = '\0'; // Null-terminate the string
+        printf("G-Sensor Data: %s\n", buffer);
+        sleep(2); // Poll every 2 seconds
+    }
+
+    fclose(file);
+    return EXIT_SUCCESS;
+}
+```
+
+### **How It Works**:
+1. **Kernel Space**:
+   - The kernel module simulates collision detection and makes the result (e.g., collision force) accessible via the proc file `/proc/gsensor_collision`.
+   - When the user-space program reads the proc file, the `detect_collision()` function in the kernel module generates or updates the data.
+
+2. **User Space**:
+   - The user-space program opens `/proc/gsensor_collision`, reads its content periodically, and displays the collision data in real-time.
+
+This example demonstrates how collision data from the G-Sensor can be shared with user space, making it suitable for monitoring or responding to physical events. Let me know if you’d like further explanations or modifications!---------------------------
+	OND Downloading Method 
+------------------------------------
+Method #1 :
+	(1.1) Connect to the same network.
+	(1.2) For chekcing ping: ping 192.168.1.1
+	(1.2) scp -r ./VNDSDK/project/image/output/images/FW_1503.bin root@192.168.1.1:/tmp/mnt/sdcard0/QUBO/
+	(1.2) 	scp -r ./VNDSDK/project/image/output/images/FW_1503.bin root@192.168.1.1:8080:/tmp/mnt/sdcard0/QUBO/
+
+-------------------------
+To run the Application :
+-------------------------
+1. Update S/W :
+	$ cp -rf /tmp/mnt/sdcard0/out/lib/* /customer/lib/
+	$ cp -rf /tmp/mnt/sdcard0/out/bin/* /customer/bin/
+	$ mv /customer/bin/mpc.sh /customer/bin/mpc_sh
+	$ source /customer/bin/mpc_sh &
+	]
+	echo "" > /config/boot_evn_set
+
+2. Test Tool :
+	(2.1) Factory Reset :
+		systemcmd "rm -rf /tmp/userface"
+	
+
+1. Run Time polimorphosim.
+
+
+-
+-----------------
+RTSP Server Init 
+------------------
+RTSP_Init:
+	 This function initializes the RTSP server by setting up necessary components like RTSP port, callbacks, and creating a thread to handle video streaming.
+Callback Functions: 
+	The function accepts several callback functions:
+CallBackStream: 
+	Likely used to handle streaming events.
+CallBackGetSnapJpeg: 
+	Likely used to get snapshots in JPEG format.
+CallBackAuth: 
+	Used for authentication checking.
+Error Handling: 
+	The function checks if the RTSP daemon and RTSP server initialization were successful. If not, it logs an error message and returns FALSE.
+Thread Creation: 
+	It creates a new thread (rtspd_vthread) to handle video streaming using the function vd_rtspd_func. If the thread creation fails, it returns FALSE.
+	
+
+
+Key Components of Camera Operation:
+	Light Detection: 
+		Cameras rely on capturing light from the scene. The lens focuses this light onto a sensor (like CMOS or CCD), which detects the intensity of the light and its color.
+
+	Image Sensor: 
+		The image sensor is a grid of photosensitive cells that convert light into electrical signals. Each pixel on the sensor detects a specific portion of the light that hits it and converts it to an electrical charge.
+
+	Signal Processing:
+		 The raw signal from the image sensor is processed by the camera’s image processor. This process might include adjusting for things like exposure, sharpness, noise reduction, and color correction.
+
+	Compression (for Video Cameras):
+		 Video cameras, especially IP cameras, compress video data to reduce the amount of bandwidth and storage required. Common compression formats include H.264 and H.265.
+
+	Storage or Transmission:
+
+		Still cameras store captured images locally on memory cards or internal storage.
+		Video cameras (IP cameras, security cameras) transmit the data over networks (wired or wireless), often using protocols like RTSP (Real-Time Streaming Protocol) or HTTP for remote viewing or cloud storage.	
+		
+=================================It looks like you're working with a variety of NMEA sentences. Here's a brief explanation of some of the key NMEA sentence types you provided:
+
+### Key NMEA Sentence Types
+
+1. **GNGSA / GPGSA**:
+   - **Format**: `$GNGSA,A,3,74,71,,,,,,,,,,,1.9,1.1,1.6,2*38`
+   - **Description**: Provides details about the GPS receiver's active satellites and the dilution of precision (DOP) values.
+   - **Fields**:
+     - Mode (A = Auto, M = Manual)
+     - Fix type (1 = No fix, 2 = 2D fix, 3 = 3D fix)
+     - PRNs of satellites used in the fix
+     - PDOP (Position Dilution of Precision)
+     - HDOP (Horizontal Dilution of Precision)
+     - VDOP (Vertical Dilution of Precision)
+
+2. **GPGSV / GLGSV / BDGSV / GAGSV**:
+   - **Format**: `$GPGSV,4,1,15,01,00,000,25,03,00,000,00,06,55,184,31,07,00,000,00,1*6E`
+   - **Description**: Provides information about the satellites in view.
+   - **Fields**:
+     - Number of sentences for full data
+     - Sentence number
+     - Total number of satellites in view
+     - Satellite PRN number
+     - Elevation (degrees)
+     - Azimuth (degrees)
+     - SNR (Signal-to-Noise Ratio)
+
+3. **GNVTG**:
+   - **Format**: `$GNVTG,0.00,T,,M,0.00,N,0.00,K,A*23`
+   - **Description**: Provides track made good and ground speed.
+   - **Fields**:
+     - Track (degrees true)
+     - Track (degrees magnetic)
+     - Speed (knots)
+     - Speed (km/h)
+
+4. **GNRMC**:
+   - **Format**: `$GNRMC,051138.00,A,1250.7708675,N,07740.6385810,E,0.00,0.00,280325,,,A,V*35`
+   - **Description**: Provides essential GPS PVT (Position, Velocity, Time) data.
+   - **Fields**:
+     - UTC time
+     - Status (A = Active, V = Void)
+     - Latitude and N/S indicator
+     - Longitude and E/W indicator
+     - Speed over ground (knots)
+     - Course over ground (degrees)
+     - Date (DDMMYY)
+     - Magnetic variation
+     - Mode indicator
+
+5. **GNGGA**:
+   - **Format**: `$GNGGA,051139.00,1250.7708675,N,07740.6385802,E,1,16,1.1,826.827,M,0.000,M,,*47`
+   - **Description**: Provides fix data including time, position, and fix-related data.
+   - **Fields**:
+     - UTC time
+     - Latitude and N/S indicator
+     - Longitude and E/W indicator
+     - Fix quality
+     - Number of satelliteshttp://us-east-1.ec2.archive.ubuntu.com/ubuntu
+
+     - HDOP
+     - Altitude
+     - Height of geoid above WGS84 ellipsoid
+
+### Reliable NMEA Parsing Methods
+
+For reliable NMEA parsing, you can use the following methods and libraries:
+
+1. **pynmeagps (Python)**:
+   - A Python library designed to read, parse, and utilize NMEA GNSS/GPS messages[1](https://pypi.org/project/pynmeagps/).
+
+2. **NMEA Parser (ArduSimple)**:
+   - A versatile parser that can decode any NMEA protocol message and allows for the creation of custom NMEA messages[2](https://sbc.ardusimple.com/nmea_parser.html).
+
+3. **nmeaParser (MathWorks)**:
+   - A MATLAB System object that parses data from standard and manufacturer-specific NMEA sentences[3](https://www.mathworks.com/help/nav/ref/nmeaparser-system-object.html).
+
+If you have any specific questions or need further assistance with your GPS data parsing, feel free to ask!
+
+
+===================================
+AWS Server Ubuntu Setup 
+-----------------------
+1. witch to a different mirror :
+	
+	(1.1) sudo nano /etc/apt/sources.list
+	(1.2) Replace the line :
+		http://us-east-1.ec2.archive.ubuntu.com/ubuntu
+		to
+		deb http://archive.ubuntu.com/ubuntu noble main restricted universe multiverse
+	(1.3) sudo apt update
+
+2. Insall Mqtt :
+	(2.1) sudo apt install mosquitto mosquitto-clients -y
+	(2.2) sudo systemctl enable mosquitto
+		sudo systemctl start mosquitto
+		
+	
+	(2.3) To create the User Name and password :
+		sudo mosquitto_passwd -c /etc/mosquitto/passwd konguess
+	(2.4) Make sure your config file (e.g., /etc/mosquitto/conf.d/auth.conf) contains:
+		>>
+		listener 1883
+		allow_anonymous false
+		password_file /etc/mosquitto/passwd
+
+		<<
+
+3. Start Your Node.js App with PM2 :
+	(3.1) pm2 start server.js
+	(3.2) pm2 startup
+	(3.3) pm2 save
+	
+View running apps: pm2 list
+View logs: pm2 logs
+Restart app: pm2 restart server
+Stop app: pm2 stop server
+Delete app: pm2 delete server	
+
+
+

@@ -54,6 +54,7 @@ void InitLTEModule();
 char* PSB_GetUniqueIDString( void );
 void InitAllmodules( void );
 void MainRunLoop();
+void drawUIListScreen( char ** ppcMenuIcons, char ** ppcMenuItems, int MaximumListSize );
 
 /*=====================================Function Defination=========================================() */
 
