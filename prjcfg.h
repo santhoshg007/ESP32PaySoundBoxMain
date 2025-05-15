@@ -66,10 +66,10 @@ extern "C" {
 #define ENABLE_PUB_SUB_CLIENT          1
 
 /* Enable the  MQTT CLIENT  */
-//#define ENABLE_MATRIX_KEYPAD          1
+#define ENABLE_MATRIX_KEYPAD          1
 
 /* Enable the  Tiny GSM CLIENT  */
-//#define ENABLE_TINY_GSM_MODULE          1
+#define ENABLE_TINY_GSM_MODULE          1
 
 /* Enable the  wifi enable module  */
 #define ENABLE_WIFI_MODULE          1
@@ -144,13 +144,69 @@ typedef enum tageMQTTStateErrorCode
 } MQTT_STATE_ERR_CODE_ENUM;
 #endif
 /*}}}*/
+
+/*{{{ Pay Sound Box thread configuration */
+#define PAY_SOUND_BOX_MANAGER_THREAD_NAME       "PSBMGR"
+#define PAY_SOUND_BOX_MANAGER_STACK_SIZE        ( 6 * 1024 )  /* 1Kb */
+/*}}}*/
+
+/*{{{ Mqtt Worker thread configuration */
+#define MQTT_WORKER_THREAD_NAME       "MQTTWK"
+#define MQTT_WORKER_STACK_SIZE        ( 8 * 1024 )  /* 1Kb */
+/*}}}*/
+
+/*{{{ Mqtt Worker thread configuration */
+#define LTE_WORKER_THREAD_NAME       "LTEWK"
+#define LTE_WORKER_STACK_SIZE        ( 10 * 1024 )  /* 1Kb */
+#define LTE_TASK_PRIORITY   1
+/*}}}*/
+
+/*{{{ Mqtt Worker thread configuration */
+#define NW_WORKER_THREAD_NAME       "NWWK"
+#define NW_WORKER_STACK_SIZE        ( 12 * 1024 )  /* 1Kb */
+/*}}}*/
+
+/*{{{ Pay Sound Box thread configuration */
+#define PSB_WORKER_THREAD_NAME       "WORKER"
+#define PAY_WORKER_STACK_SIZE        ( 4 * 1024 )  /* 1Kb */
+/*}}}*/
+
+/*{{{ Keypad thread configuration */
+#define KEYPAD_THREAD_NAME       "KEYPAD"
+#define KEYPAD_STACK_SIZE        ( 4 * 1024 )  /* 1Kb */
+/*}}}*/
+
+#define MAX_UNIQUE_ID_LEN       ( 20 )
+#define MAX_MQTT_TOPIC_SUBSCRIBE_LEN       ( 128 )
+
+
+#define MQTT_SUBS_TOPIC_PAYMENTS_STATUS       "paymentstatus"
+
+
+#define TINY_GSM_MODEM_BG96
+#define TINY_GSM_DEBUG Serial
+
+// Define the RX and TX pins for the modem.  Make sure these match *your* hardware.
+#define MODEM_RX 17
+#define MODEM_TX 16
+
+
+#define EVT_WIFI_CONNECTED (1 << 0)
+#define EVT_4G_CONNECTED   (1 << 1)
+#define EVT_MQTT_CONNECTED (1 << 2)
+#define EVT_WIFI_CONNECTING (1 << 3) // Add connecting states
+#define EVT_4G_CONNECTING   (1 << 4)
+#define EVT_INTERNET_CONNECTED (EVT_WIFI_CONNECTED | EVT_4G_CONNECTED) //helper
+
 /*=====================================typedef=====================================================() */
 
 // Struct to send data through the message queue
-struct Message 
+typedef struct tageMessageInfoStruct
 {
-    char key;  // For text characters, we use `char`
-};
+    char cKey;  // For text characters, we use `char`
+    char acReserved[3];
+    float f32Amount;
+} MESSAGE_INFO_STRUCT;
 /*=====================================Global Variable=============================================() */
 
 /*=====================================Private Variable============================================() */
