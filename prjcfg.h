@@ -152,7 +152,8 @@ typedef enum tageMQTTStateErrorCode
 
 /*{{{ Mqtt Worker thread configuration */
 #define MQTT_WORKER_THREAD_NAME       "MQTTWK"
-#define MQTT_WORKER_STACK_SIZE        ( 8 * 1024 )  /* 1Kb */
+
+#define MQTT_WORKER_STACK_SIZE        ( 20 * 1024 )  /* 15Kb for non debug 20kb for debug*/
 /*}}}*/
 
 /*{{{ Mqtt Worker thread configuration */
@@ -163,7 +164,7 @@ typedef enum tageMQTTStateErrorCode
 
 /*{{{ Mqtt Worker thread configuration */
 #define NW_WORKER_THREAD_NAME       "NWWK"
-#define NW_WORKER_STACK_SIZE        ( 12 * 1024 )  /* 1Kb */
+#define NW_WORKER_STACK_SIZE        ( 8 * 1024 )  /* 1Kb */
 /*}}}*/
 
 /*{{{ Pay Sound Box thread configuration */

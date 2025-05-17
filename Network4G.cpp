@@ -158,7 +158,14 @@ char* PSB_GetUniqueIDString( void );
  */
 void pingNetwork( const char* target ) 
 {
+    if (!modem.isGprsConnected()) {
+        Serial.println("GPRS not connected. Cannot ping.");
+        return;
+    }
+
     Serial.printf("[Ping] Pinging %s...\n", target);
+
+    Serial.println("Pinging google.com...");
 
     String command = String("AT+QPING=1,\"") + target + "\"";
     SerialAT.println(command);
@@ -178,6 +185,22 @@ void pingNetwork( const char* target )
     }
 
     Serial.println("[Ping] Failed or timeout.");
+}
+
+void switchMQTTClient(bool use4G)
+{
+    if (gMQTTClient.connected()) {
+        gMQTTClient.disconnect();
+        delay(100);
+    }
+
+    if (use4G) {
+        gMQTTClient.setClient(gsmClient);
+    } else {
+        gMQTTClient.setClient(gWifiespClient);
+    }
+
+    //startMQTT();  // reconnect MQTT
 }
 
 // Function to disconnect from MQTT
@@ -376,8 +399,9 @@ void MQTT_MonitorTask( void* parameter )
     {
         if (!(xEventGroupGetBits(networkEventGroup) & EVT_INTERNET_CONNECTED)) 
         {
-            Serial.println("MQTT Task: No internet connection.  Stopping MQTT.");
+            //Serial.println("MQTT Task: No internet connection.  Stopping MQTT.");
             //stopMQTT();
+            connectToInternet();
             vTaskDelay(pdMS_TO_TICKS(5000)); //check again in 5 seconds.
             continue;
         }
@@ -825,11 +849,15 @@ void connectToInternet()
     if (is4GConnected) 
     {
         Serial.println("Connected to 4G.");
+        //gMQTTClient.setClient(gsmClient);
+        switchMQTTClient(true);
+        xEventGroupSetBits(networkEventGroup, EVT_4G_CONNECTED);
+        xEventGroupClearBits(networkEventGroup, EVT_WIFI_CONNECTED);        
         return;
     }
-
     // Priority 2: If 4G fails, try to connect to WiFi
     Serial.println("4G connection failed.  Trying WiFi...");
+#if 0
     promptWiFiConnection();
 
     if (isWifiConnected) 
@@ -843,18 +871,19 @@ void connectToInternet()
     Serial.println("Failed to connect to either WiFi or 4G.");
     // Handle the error.  For now, loop.
     while (true);
+#endif    
 }
 
 void connectAndMonitorInternetTask( void *pvParameters ) 
 {
     Serial.println("Connection and monitor thread start...");
-    InitLTEModule();
+    //InitLTEModule();
 
     while (true) 
     {
         if (!(xEventGroupGetBits(networkEventGroup) & EVT_INTERNET_CONNECTED)) 
         {
-             //connectToInternet();
+             connectToInternet();
 
              if ( is4GConnected ) 
              {
