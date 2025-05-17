@@ -37,7 +37,7 @@ extern "C" {
 #define ENABLE_WIFI_SUPPORT         1
 
 /* Enable the wifi secure connect  */
-#define ENABLE_SECURE_WIFI_CONNECT 1
+//#define ENABLE_SECURE_WIFI_CONNECT 1
 
 #define ENABLE_HARD_CODE_CERTIFICATE 1
 

@@ -81,16 +81,17 @@ TinyGsmClient client(modem);
 
 
 // MQTT broker details
-const char*  cgpcMqttServer = "io.adafruit.com"; // or hostname
+const char*  cgpcMqttServer = "54.162.150.3"; // or hostname
 
 #ifdef ENABLE_SECURE_WIFI_CONNECT
+#error
 const short int cgpi16MqttPort = 8883; // SSL/TLS port for Adafruit IO
 #else
 const short int cgpi16MqttPort = 1883; // Default MQTT port
 #endif /* ENABLE_SECURE_WIFI_CONNECT */
 
-const char* cgpcMqttUser = "SanthoshG"; // Optional
-const char* cgpcMqttPassword = "aio_uebF37sNt31BXInllYdbEUGgeSGD"; // Optional
+const char* cgpcMqttUser = "konguess"; // Optional
+const char* cgpcMqttPassword = "konguess#$007"; // Optional
 
 
 // 4G APN and credentials
@@ -299,7 +300,7 @@ bool MQTT_Reconnect( void )
 
       strcat( acMQttSubscribeTopic, MQTT_SUBS_TOPIC_PAYMENTS_STATUS );
 #else
-      strcpy( acMQttSubscribeTopic, "SanthoshG/feeds/paymenttrigger" );
+      strcpy( acMQttSubscribeTopic, "dbs/txnResponse" );
 #endif
       Serial.println("connected:");
       Serial.println(acMQttSubscribeTopic);
@@ -751,6 +752,7 @@ void promptWiFiConnection()
                 i32WifiSelectIndex--;
                 if (i32WifiSelectIndex < topIndex) topIndex--;
                 Serial.println("[WIFI_DISPLAY] Drawing SSID list (UP)");
+                delay(20);
                 drawSSIDList(topIndex, i32WifiSelectIndex - topIndex, n);
             } 
             else if (key == DOWN_KEY && i32WifiSelectIndex < n - 1) 
@@ -758,6 +760,7 @@ void promptWiFiConnection()
                 i32WifiSelectIndex++;
                 if (i32WifiSelectIndex >= topIndex + MAX_VISIBLE_SSIDS) topIndex++;
                 Serial.println("[WIFI_DISPLAY] Drawing SSID list (DOWN)");
+                delay(20);
                 drawSSIDList(topIndex, i32WifiSelectIndex - topIndex, n);
             } 
             else if (key == 'D') 
@@ -777,7 +780,9 @@ void promptWiFiConnection()
                 n = WiFi.scanNetworks();
                 Serial.printf("[WIFI_REFRESH] Scan complete. %d networks found.\n", n);
                 Serial.println("[WIFI_DISPLAY] Drawing SSID list (refresh)");
+                delay(50);
                 drawSSIDList(topIndex, i32WifiSelectIndex - topIndex, n);
+                delay(100);
                 drawActionBar();
             }
         }
